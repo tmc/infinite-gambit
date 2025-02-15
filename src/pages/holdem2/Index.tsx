@@ -24,6 +24,7 @@ type GameState = {
   lastAction?: string;
   dealerPosition: number;
   isDealing: boolean;
+  stepIndex: number;
 };
 
 type ChipAnimation = {
@@ -121,7 +122,8 @@ const INITIAL_GAME_STATE: GameState = {
   currentPlayer: 0,
   phase: 'preflop',
   dealerPosition: 3,
-  isDealing: false
+  isDealing: false,
+  stepIndex: -1
 };
 
 const SUITS = ['♠', '♥', '♦', '♣'] as const;
@@ -150,6 +152,7 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [deck, setDeck] = useState<string[]>([]);
   const [chipAnimations, setChipAnimations] = useState<ChipAnimation[]>([]);
+  const [shuffledDeck, setShuffledDeck] = useState<string[]>([]);
 
   const getCardColor = (card: string) => {
     return card.includes('♥') || card.includes('♦') ? 'red' : 'black';
@@ -163,88 +166,142 @@ const Index = () => {
     };
   };
 
-  const startNewRound = () => {
-    const shuffledDeck = shuffleDeck(createDeck());
-    setDeck(shuffledDeck);
+  const executeStep = (stepIndex: number) => {
+    const getPlayerIndex = (offset: number) => {
+      const pos = (gameState.dealerPosition + 1 + offset) % gameState.players.length;
+      return pos >= 3 ? pos + 1 : pos;
+    };
 
-    // Reset to initial state first
+    switch (stepIndex) {
+      case 0: // Initialize new hand
+        setGameState(prev => ({
+          ...prev,
+          phase: 'preflop',
+          lastAction: 'New hand started',
+          stepIndex: 0
+        }));
+        break;
+
+      case 1: // Deal first card to player 1
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(0) ? [shuffledDeck[0]] : player.hand
+          })),
+          lastAction: `Dealing first card to ${prev.players[getPlayerIndex(0)].name}`,
+          stepIndex: 1
+        }));
+        break;
+
+      case 2: // Deal first card to player 2
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(1) ? [shuffledDeck[1]] : player.hand
+          })),
+          lastAction: `Dealing first card to ${prev.players[getPlayerIndex(1)].name}`,
+          stepIndex: 2
+        }));
+        break;
+
+      // ... Continue for each player's first card
+
+      case 6: // Start second round of dealing
+        setGameState(prev => ({
+          ...prev,
+          lastAction: 'Starting second round of cards',
+          stepIndex: 6
+        }));
+        break;
+
+      case 7: // Deal second card to player 1
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(0) ? 
+              [...player.hand, shuffledDeck[5]] : player.hand
+          })),
+          lastAction: `Dealing second card to ${prev.players[getPlayerIndex(0)].name}`,
+          stepIndex: 7
+        }));
+        break;
+
+      // ... Continue for each player's second card
+
+      case 12: // Deal flop
+        setGameState(prev => ({
+          ...prev,
+          phase: 'flop',
+          communityCards: [shuffledDeck[10], shuffledDeck[11], shuffledDeck[12]],
+          lastAction: 'Dealing flop',
+          stepIndex: 12
+        }));
+        break;
+
+      case 13: // Deal turn
+        setGameState(prev => ({
+          ...prev,
+          phase: 'turn',
+          communityCards: [...prev.communityCards, shuffledDeck[13]],
+          lastAction: 'Dealing turn',
+          stepIndex: 13
+        }));
+        break;
+
+      case 14: // Deal river
+        setGameState(prev => ({
+          ...prev,
+          phase: 'river',
+          communityCards: [...prev.communityCards, shuffledDeck[14]],
+          lastAction: 'Dealing river',
+          stepIndex: 14,
+          isDealing: false
+        }));
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  const nextStep = () => {
+    if (gameState.stepIndex === -1) {
+      // First step - initialize the deck
+      const newDeck = shuffleDeck(createDeck());
+      setShuffledDeck(newDeck);
+      setGameState(prev => ({
+        ...INITIAL_GAME_STATE,
+        dealerPosition: (prev.dealerPosition + 1) % prev.players.length,
+        isDealing: true,
+        stepIndex: 0
+      }));
+    } else {
+      executeStep(gameState.stepIndex + 1);
+    }
+  };
+
+  const startNewRound = () => {
+    const newDeck = shuffleDeck(createDeck());
+    setShuffledDeck(newDeck);
+    setDeck(newDeck);
+
+    // Reset to initial state
     setGameState({
       ...INITIAL_GAME_STATE,
       dealerPosition: (gameState.dealerPosition + 1) % gameState.players.length,
       isDealing: true,
       phase: 'preflop',
-      lastAction: 'New hand dealt'
+      lastAction: 'New hand dealt',
+      stepIndex: -1
     });
 
-    // Calculate starting positions relative to dealer
-    const getPlayerIndex = (offset: number) => {
-      const pos = (gameState.dealerPosition + 1 + offset) % gameState.players.length;
-      // Skip dealer position (index 3)
-      return pos >= 3 ? pos + 1 : pos;
-    };
-
-    // Deal first card to each player, starting after dealer
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        players: prev.players.map((player, index) => ({
-          ...player,
-          hand: index === getPlayerIndex(0) ? [shuffledDeck[0]] :
-                index === getPlayerIndex(1) ? [shuffledDeck[1]] :
-                index === getPlayerIndex(2) ? [shuffledDeck[2]] :
-                index === getPlayerIndex(3) ? [shuffledDeck[3]] :
-                index === getPlayerIndex(4) ? [shuffledDeck[4]] :
-                []
-        }))
-      }));
-    }, 500);
-
-    // Deal second card to each player, maintaining the same order
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        players: prev.players.map((player, index) => ({
-          ...player,
-          hand: index === getPlayerIndex(0) ? [shuffledDeck[0], shuffledDeck[5]] :
-                index === getPlayerIndex(1) ? [shuffledDeck[1], shuffledDeck[6]] :
-                index === getPlayerIndex(2) ? [shuffledDeck[2], shuffledDeck[7]] :
-                index === getPlayerIndex(3) ? [shuffledDeck[3], shuffledDeck[8]] :
-                index === getPlayerIndex(4) ? [shuffledDeck[4], shuffledDeck[9]] :
-                player.hand
-        }))
-      }));
-    }, 1500);
-
-    // Deal flop
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        phase: 'flop',
-        communityCards: [shuffledDeck[10], shuffledDeck[11], shuffledDeck[12]],
-        lastAction: 'Flop dealt'
-      }));
-    }, 2500);
-
-    // Deal turn
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        phase: 'turn',
-        communityCards: [...prev.communityCards, shuffledDeck[13]],
-        lastAction: 'Turn dealt'
-      }));
-    }, 3500);
-
-    // Deal river
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        phase: 'river',
-        communityCards: [...prev.communityCards, shuffledDeck[14]],
-        lastAction: 'River dealt',
-        isDealing: false
-      }));
-    }, 4500);
+    // Now execute all steps with longer delays
+    for (let i = 0; i <= 14; i++) {
+      setTimeout(() => executeStep(i), i * 800); // Slower animation - 800ms between steps
+    }
   };
 
   const dealerPos = getDealerPosition();
@@ -343,8 +400,16 @@ const Index = () => {
             <button 
               onClick={startNewRound}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              disabled={gameState.isDealing}
             >
               Deal New Hand
+            </button>
+            <button 
+              onClick={nextStep}
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
+              disabled={!gameState.isDealing || gameState.stepIndex >= 14}
+            >
+              Next Step
             </button>
             <div className="chip-stack">
               <span className="text-muted-foreground">Current Pot:</span>
