@@ -116,8 +116,31 @@ const INITIAL_GAME_STATE: GameState = {
   isDealing: false
 };
 
+const SUITS = ['♠', '♥', '♦', '♣'] as const;
+const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'] as const;
+
+const createDeck = () => {
+  const deck: string[] = [];
+  SUITS.forEach(suit => {
+    RANKS.forEach(rank => {
+      deck.push(rank + suit);
+    });
+  });
+  return deck;
+};
+
+const shuffleDeck = (deck: string[]) => {
+  const shuffled = [...deck];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
+  const [deck, setDeck] = useState<string[]>([]);
   const [chipAnimations, setChipAnimations] = useState<{
     fromId: string;
     amount: number;
@@ -137,46 +160,53 @@ const Index = () => {
   };
 
   const startNewRound = () => {
+    const shuffledDeck = shuffleDeck(createDeck());
+    setDeck(shuffledDeck);
+
+    // Reset to initial state first
     setGameState({
       ...INITIAL_GAME_STATE,
       dealerPosition: (gameState.dealerPosition + 1) % gameState.players.length,
       isDealing: true
     });
 
+    // Deal first card to each player
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
         players: prev.players.map((player, index) => ({
           ...player,
-          hand: index === 0 ? ['A♠'] :
-                index === 1 ? ['Q♥'] :
-                index === 2 ? ['8♣'] :
-                index === 4 ? ['T♠'] :
-                index === 5 ? ['J♠'] :
+          hand: index === 0 ? [shuffledDeck[0]] :
+                index === 1 ? [shuffledDeck[1]] :
+                index === 2 ? [shuffledDeck[2]] :
+                index === 4 ? [shuffledDeck[3]] :
+                index === 5 ? [shuffledDeck[4]] :
                 []
         }))
       }));
     }, 500);
 
+    // Deal second card to each player
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
         players: prev.players.map((player, index) => ({
           ...player,
-          hand: index === 0 ? ['A♠', 'K♠'] :
-                index === 1 ? ['Q♥', 'J♥'] :
-                index === 2 ? ['8♣', '8♦'] :
-                index === 4 ? ['T♠', 'T♣'] :
-                index === 5 ? ['J♠', 'Q♠'] :
+          hand: index === 0 ? [shuffledDeck[0], shuffledDeck[5]] :
+                index === 1 ? [shuffledDeck[1], shuffledDeck[6]] :
+                index === 2 ? [shuffledDeck[2], shuffledDeck[7]] :
+                index === 4 ? [shuffledDeck[3], shuffledDeck[8]] :
+                index === 5 ? [shuffledDeck[4], shuffledDeck[9]] :
                 player.hand
         }))
       }));
     }, 1500);
 
+    // Deal flop (first 3 community cards)
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
-        communityCards: ['7♥', '2♣', '5♦'],
+        communityCards: [shuffledDeck[10], shuffledDeck[11], shuffledDeck[12]],
         isDealing: false
       }));
     }, 2500);
