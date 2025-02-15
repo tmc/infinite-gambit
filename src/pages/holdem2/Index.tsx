@@ -129,6 +129,9 @@ const INITIAL_GAME_STATE: GameState = {
 const SUITS = ['♠', '♥', '♦', '♣'] as const;
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'] as const;
 
+const SMALL_BLIND = 10;
+const BIG_BLIND = 20;
+
 const createDeck = () => {
   const deck: string[] = [];
   SUITS.forEach(suit => {
@@ -187,16 +190,59 @@ const Index = () => {
       return;
     }
 
-    console.log('Executing step:', stepIndex, 'Current dealer position:', gameState.dealerPosition); // Debug log
+    console.log('Executing step:', stepIndex, 'Current dealer position:', gameState.dealerPosition);
 
     switch (stepIndex) {
-      case 0: // Initialize new hand
-        setGameState(prev => ({
+      case 0: // Initialize new hand and post blinds
+        const smallBlindIndex = getPlayerIndex(0);
+        const bigBlindIndex = getPlayerIndex(1);
+        
+        setGameState(prev => {
+          const updatedPlayers = prev.players.map((player, index) => {
+            if (index === smallBlindIndex) {
+              return {
+                ...player,
+                chips: player.chips - SMALL_BLIND,
+                bet: SMALL_BLIND
+              };
+            }
+            if (index === bigBlindIndex) {
+              return {
+                ...player,
+                chips: player.chips - BIG_BLIND,
+                bet: BIG_BLIND
+              };
+            }
+            return player;
+          });
+
+          return {
+            ...prev,
+            players: updatedPlayers,
+            pot: SMALL_BLIND + BIG_BLIND,
+            currentBet: BIG_BLIND,
+            phase: 'preflop',
+            lastAction: `Blinds posted: ${SMALL_BLIND}/${BIG_BLIND}`,
+            stepIndex: 0
+          };
+        });
+
+        // Add chip animations for blinds
+        setChipAnimations(prev => [
           ...prev,
-          phase: 'preflop',
-          lastAction: 'New hand started',
-          stepIndex: 0
-        }));
+          { 
+            fromId: prev.players[smallBlindIndex].id, 
+            amount: SMALL_BLIND, 
+            timestamp: Date.now(), 
+            type: 'bet' 
+          },
+          { 
+            fromId: prev.players[bigBlindIndex].id, 
+            amount: BIG_BLIND, 
+            timestamp: Date.now() + 100, 
+            type: 'bet' 
+          }
+        ]);
         break;
 
       case 1: // Deal first card to player 1
