@@ -87,7 +87,16 @@ export default function Tournament({ settings }: TournamentProps) {
           for (const event of events) {
             const parsed = JSON.parse(event);
             if (parsed.type === 'gameState') {
-              setGameState(parsed.data);
+              // Use functional update to avoid race conditions
+              setGameState(prev => ({
+                ...parsed.data,
+                // Preserve previous state for smooth transitions
+                players: parsed.data.players.map((player: GameState['players'][0]) => ({
+                  ...player,
+                  // Keep previous chip count for animation
+                  prevChips: prev?.players.find(p => p.id === player.id)?.chips ?? player.chips,
+                }))
+              }));
             }
           }
         }
@@ -99,7 +108,11 @@ export default function Tournament({ settings }: TournamentProps) {
     startGame();
   }, [settings]);
 
-  if (!gameState) return <div>Loading tournament...</div>;
+  if (!gameState) return (
+    <div className="flex h-screen items-center justify-center bg-gray-900 text-gray-100">
+      <div className="text-xl">Loading tournament...</div>
+    </div>
+  );
 
   const topPlayers = getTopPlayers();
 
@@ -107,20 +120,20 @@ export default function Tournament({ settings }: TournamentProps) {
     <div className="flex h-[calc(100vh-4rem)] bg-gray-900 text-gray-100">
       <div className="flex-1 flex flex-col p-4 overflow-hidden">
         {/* Fixed-height header section */}
-        <div className="flex-none space-y-4">
-          <div className="flex justify-between items-start">
-            <div>
+        <div className="flex-none h-48 space-y-4">
+          <div className="flex justify-between items-start h-16">
+            <div className="min-w-[150px]">
               <h2 className="text-xl font-bold text-cyan-400">Phase: {gameState.phase}</h2>
               <p className="text-lg text-green-400">Pot: ${gameState.pot}</p>
             </div>
-            <div className="text-right">
+            <div className="text-right min-w-[150px]">
               <p className="text-lg font-semibold text-purple-400">Hand #{gameState.handNumber}</p>
               <p className="text-sm text-cyan-400">Current Bet: ${gameState.currentBet}</p>
             </div>
           </div>
 
-          {/* Top Players Section */}
-          <div className="bg-gray-800 border border-cyan-900 rounded-lg p-3">
+          {/* Top Players Section - Fixed height */}
+          <div className="bg-gray-800 border border-cyan-900 rounded-lg p-3 h-24">
             <h3 className="text-sm font-semibold text-cyan-400 mb-2">Top Players</h3>
             <div className="grid grid-cols-3 gap-2">
               {topPlayers.map(player => (
@@ -129,7 +142,7 @@ export default function Tournament({ settings }: TournamentProps) {
                   className="flex items-center gap-2 p-2 bg-gray-800 border border-gray-700 rounded"
                 >
                   <div className={`
-                    w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold
+                    w-6 h-6 flex-none flex items-center justify-center rounded-full text-sm font-bold
                     ${player.position === 1 ? 'bg-yellow-900 text-yellow-300 border border-yellow-500' :
                       player.position === 2 ? 'bg-gray-700 text-gray-300 border border-gray-500' :
                       'bg-orange-900 text-orange-300 border border-orange-500'}
@@ -155,14 +168,17 @@ export default function Tournament({ settings }: TournamentProps) {
             </div>
           </div>
 
-          {gameState.lastAction && (
-            <p className="text-sm text-cyan-300 bg-gray-800 border border-cyan-900 p-2 rounded">
-              Last Action: {gameState.lastAction}
-            </p>
-          )}
+          {/* Last Action - Fixed height */}
+          <div className="h-8">
+            {gameState.lastAction && (
+              <p className="text-sm text-cyan-300 bg-gray-800 border border-cyan-900 p-2 rounded">
+                {gameState.lastAction}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Scrollable game content */}
+        {/* Scrollable game content with fixed header */}
         <div className="flex-1 overflow-y-auto mt-4 min-h-0">
           {gameState.winners ? (
             <div className="bg-gray-800 border border-green-900 p-4 rounded-lg">
@@ -170,11 +186,11 @@ export default function Tournament({ settings }: TournamentProps) {
               <div className="grid gap-4">
                 {gameState.winners.map((winner) => (
                   <div key={winner.id} className="flex items-center gap-4 p-4 bg-gray-800 border border-cyan-900 rounded-lg">
-                    <div className="text-2xl font-bold text-cyan-400">#{winner.rank}</div>
-                    <div className="flex-1">
+                    <div className="text-2xl font-bold text-cyan-400 w-12 flex-none">#{winner.rank}</div>
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-cyan-300">{winner.name}</h3>
-                        <span className={`text-xs px-2 py-1 rounded ${
+                        <h3 className="font-bold text-cyan-300 truncate">{winner.name}</h3>
+                        <span className={`text-xs px-2 py-1 rounded flex-none ${
                           winner.personality.style === 'aggressive' ? 'bg-red-900 text-red-300' :
                           winner.personality.style === 'conservative' ? 'bg-blue-900 text-blue-300' :
                           winner.personality.style === 'balanced' ? 'bg-green-900 text-green-300' :
@@ -183,7 +199,7 @@ export default function Tournament({ settings }: TournamentProps) {
                           {winner.personality.style}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400 mt-1">{winner.personality.description}</p>
+                      <p className="text-sm text-gray-400 mt-1 line-clamp-2">{winner.personality.description}</p>
                       <div className="grid grid-cols-2 gap-2 text-sm mt-2">
                         <p className="text-green-400">Final Chips: ${winner.chips}</p>
                         <p className="text-purple-400">Hands Won: {winner.handsWon}</p>
@@ -198,31 +214,33 @@ export default function Tournament({ settings }: TournamentProps) {
             </div>
           ) : (
             <>
-              <div className="mb-4">
+              {/* Community Cards - Fixed height */}
+              <div className="h-24 mb-4">
                 <h3 className="text-lg font-semibold text-cyan-400 mb-2">Community Cards</h3>
-                <div className="flex gap-2 min-h-[60px] bg-gray-800 border border-green-900 p-3 rounded-lg">
+                <div className="flex gap-2 h-16 bg-gray-800 border border-green-900 p-3 rounded-lg items-center">
                   {gameState.communityCards.map((card, i) => (
-                    <div key={i} className="p-2 bg-gray-900 border border-cyan-900 rounded shadow-lg text-white">
+                    <div key={i} className="w-12 h-16 flex items-center justify-center bg-gray-900 border border-cyan-900 rounded shadow-lg text-white">
                       {card}
                     </div>
                   ))}
                 </div>
               </div>
 
+              {/* Player Grid - Fixed height cards */}
               <div className="grid grid-cols-2 gap-4">
                 {gameState.players.map((player, i) => (
                   <div
                     key={player.id}
-                    className={`p-4 bg-gray-800 rounded-lg border ${
+                    className={`h-48 p-4 bg-gray-800 rounded-lg border transition-all duration-300 ${
                       i === gameState.currentPlayer ? 'border-cyan-500 shadow-lg shadow-cyan-900/50' : 'border-gray-700'
                     } ${player.folded ? 'opacity-50' : ''} ${
                       player.eliminated ? 'bg-red-900/20' : ''
                     }`}
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold text-cyan-300">{player.name}</h4>
-                        <span className={`text-xs ${
+                    <div className="flex justify-between items-start h-8">
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-cyan-300 truncate">{player.name}</h4>
+                        <span className={`text-xs truncate block ${
                           player.personality.style === 'aggressive' ? 'text-red-400' :
                           player.personality.style === 'conservative' ? 'text-blue-400' :
                           player.personality.style === 'balanced' ? 'text-green-400' :
@@ -232,30 +250,30 @@ export default function Tournament({ settings }: TournamentProps) {
                         </span>
                       </div>
                       {player.eliminated ? (
-                        <span className="text-xs bg-red-900 text-red-300 border border-red-700 px-2 py-1 rounded">
+                        <span className="text-xs bg-red-900 text-red-300 border border-red-700 px-2 py-1 rounded flex-none">
                           #{player.rank}
                         </span>
                       ) : (
-                        <span className="text-xs bg-cyan-900 text-cyan-300 border border-cyan-700 px-2 py-1 rounded">
+                        <span className="text-xs bg-cyan-900 text-cyan-300 border border-cyan-700 px-2 py-1 rounded flex-none">
                           Active
                         </span>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-x-4 text-sm mt-2">
+                    <div className="grid grid-cols-2 gap-x-4 text-sm mt-2 h-12">
                       <p className="text-green-400">Chips: ${player.chips}</p>
                       <p className="text-purple-400">Hands Won: {player.handsWon}</p>
                       <p className="text-cyan-400">Hands Played: {player.handsPlayed}</p>
                       <p className="text-blue-400">Total Bets: ${player.totalBets}</p>
                     </div>
                     {player.bet > 0 && (
-                      <div className="mt-2 text-sm bg-yellow-900/30 border border-yellow-900 p-2 rounded text-yellow-300">
+                      <div className="mt-2 text-sm bg-yellow-900/30 border border-yellow-900 p-2 rounded text-yellow-300 h-8">
                         Current Bet: ${player.bet}
                       </div>
                     )}
                     {!player.eliminated && (
-                      <div className="flex gap-2 mt-2 min-h-[48px]">
+                      <div className="flex gap-2 mt-2 h-16 items-center">
                         {player.hand.map((card, j) => (
-                          <div key={j} className="p-2 bg-gray-900 border border-cyan-900 rounded shadow-lg text-white">
+                          <div key={j} className="w-12 h-16 flex items-center justify-center bg-gray-900 border border-cyan-900 rounded shadow-lg text-white">
                             {card}
                           </div>
                         ))}
@@ -269,8 +287,8 @@ export default function Tournament({ settings }: TournamentProps) {
         </div>
       </div>
       
-      {/* Event Stream Side Panel */}
-      <div className="w-80 border-l border-cyan-900 p-4 bg-gray-900">
+      {/* Event Stream Side Panel - Fixed width */}
+      <div className="w-80 flex-none border-l border-cyan-900 p-4 bg-gray-900 overflow-hidden">
         <EventStream gameState={gameState} className="h-full" />
       </div>
     </div>
