@@ -32,7 +32,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '1',
       name: 'Player 1',
       chips: 1000,
-      hand: ['A♠', 'K♠'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -45,7 +45,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '2',
       name: 'Player 2',
       chips: 1200,
-      hand: ['Q♥', 'J♥'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -58,7 +58,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '3',
       name: 'Player 3',
       chips: 800,
-      hand: ['8♣', '8♦'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -84,7 +84,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '5',
       name: 'Player 5',
       chips: 950,
-      hand: ['T♠', 'T♣'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -97,7 +97,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '6',
       name: 'Player 6',
       chips: 1100,
-      hand: ['J♠', 'Q♠'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -108,11 +108,11 @@ const INITIAL_GAME_STATE: GameState = {
     }
   ],
   pot: 0,
-  communityCards: ['7♥', '2♣', '5♦'],
+  communityCards: [],
   currentBet: 0,
   currentPlayer: 0,
-  phase: 'flop',
-  dealerPosition: 3, // Fixed dealer position
+  phase: 'preflop',
+  dealerPosition: 3,
   isDealing: false
 };
 
@@ -146,6 +146,16 @@ const Index = () => {
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
+        players: prev.players.map((player, index) => ({
+          ...player,
+          hand: index === 0 ? ['A♠', 'K♠'] :
+                index === 1 ? ['Q♥', 'J♥'] :
+                index === 2 ? ['8♣', '8♦'] :
+                index === 4 ? ['T♠', 'T♣'] :
+                index === 5 ? ['J♠', 'Q♠'] :
+                []
+        })),
+        communityCards: ['7♥', '2♣', '5♦'],
         isDealing: false
       }));
     }, 2000);
