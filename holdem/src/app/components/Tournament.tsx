@@ -1,21 +1,30 @@
 import { useEffect, useState } from 'react';
 import EventStream from './EventStream';
 
-type GameState = {
-  players: {
-    id: string;
+type Player = {
+  id: string;
+  name: string;
+  chips: number;
+  hand: string[];
+  bet: number;
+  folded: boolean;
+  handsWon: number;
+  handsPlayed: number;
+  totalBets: number;
+  biggestPot: number;
+  eliminated: boolean;
+  rank?: number;
+  personality: {
+    style: 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
+    riskTolerance: number;
+    bluffFrequency: number;
     name: string;
-    chips: number;
-    hand: string[];
-    bet: number;
-    folded: boolean;
-    handsWon: number;
-    handsPlayed: number;
-    totalBets: number;
-    biggestPot: number;
-    eliminated: boolean;
-    rank?: number;
-  }[];
+    description: string;
+  };
+};
+
+type GameState = {
+  players: Player[];
   pot: number;
   communityCards: string[];
   currentBet: number;
@@ -23,16 +32,7 @@ type GameState = {
   phase: string;
   lastAction?: string;
   handNumber: number;
-  winners?: {
-    id: string;
-    name: string;
-    chips: number;
-    handsWon: number;
-    handsPlayed: number;
-    totalBets: number;
-    biggestPot: number;
-    rank: number;
-  }[];
+  winners?: Player[];
 };
 
 type TournamentProps = {
@@ -137,7 +137,17 @@ export default function Tournament({ settings }: TournamentProps) {
                     #{player.position}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="truncate text-sm font-medium text-cyan-300">{player.name}</div>
+                    <div className="truncate text-sm font-medium text-cyan-300">
+                      {player.name}
+                      <span className={`ml-2 text-xs ${
+                        player.personality.style === 'aggressive' ? 'text-red-400' :
+                        player.personality.style === 'conservative' ? 'text-blue-400' :
+                        player.personality.style === 'balanced' ? 'text-green-400' :
+                        'text-purple-400'
+                      }`}>
+                        {player.personality.style}
+                      </span>
+                    </div>
                     <div className="text-xs text-green-400">${player.chips}</div>
                   </div>
                 </div>
@@ -162,8 +172,19 @@ export default function Tournament({ settings }: TournamentProps) {
                   <div key={winner.id} className="flex items-center gap-4 p-4 bg-gray-800 border border-cyan-900 rounded-lg">
                     <div className="text-2xl font-bold text-cyan-400">#{winner.rank}</div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-cyan-300">{winner.name}</h3>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-cyan-300">{winner.name}</h3>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          winner.personality.style === 'aggressive' ? 'bg-red-900 text-red-300' :
+                          winner.personality.style === 'conservative' ? 'bg-blue-900 text-blue-300' :
+                          winner.personality.style === 'balanced' ? 'bg-green-900 text-green-300' :
+                          'bg-purple-900 text-purple-300'
+                        }`}>
+                          {winner.personality.style}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-400 mt-1">{winner.personality.description}</p>
+                      <div className="grid grid-cols-2 gap-2 text-sm mt-2">
                         <p className="text-green-400">Final Chips: ${winner.chips}</p>
                         <p className="text-purple-400">Hands Won: {winner.handsWon}</p>
                         <p className="text-cyan-400">Hands Played: {winner.handsPlayed}</p>
@@ -199,7 +220,17 @@ export default function Tournament({ settings }: TournamentProps) {
                     }`}
                   >
                     <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-cyan-300">{player.name}</h4>
+                      <div>
+                        <h4 className="font-semibold text-cyan-300">{player.name}</h4>
+                        <span className={`text-xs ${
+                          player.personality.style === 'aggressive' ? 'text-red-400' :
+                          player.personality.style === 'conservative' ? 'text-blue-400' :
+                          player.personality.style === 'balanced' ? 'text-green-400' :
+                          'text-purple-400'
+                        }`}>
+                          {player.personality.description}
+                        </span>
+                      </div>
                       {player.eliminated ? (
                         <span className="text-xs bg-red-900 text-red-300 border border-red-700 px-2 py-1 rounded">
                           #{player.rank}
