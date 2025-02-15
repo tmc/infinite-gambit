@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 
 type Player = {
@@ -40,13 +39,77 @@ const INITIAL_GAME_STATE: GameState = {
         description: 'Bold and ruthless'
       }
     },
-    // Add more players...
+    {
+      id: '2',
+      name: 'Player 2',
+      chips: 1200,
+      hand: ['Q♥', 'J♥'],
+      bet: 0,
+      folded: false,
+      eliminated: false,
+      personality: {
+        style: 'conservative',
+        description: 'Plays it safe'
+      }
+    },
+    {
+      id: '3',
+      name: 'Player 3',
+      chips: 800,
+      hand: ['8♣', '8♦'],
+      bet: 0,
+      folded: false,
+      eliminated: false,
+      personality: {
+        style: 'balanced',
+        description: 'Well-rounded player'
+      }
+    },
+    {
+      id: '4',
+      name: 'Player 4',
+      chips: 1500,
+      hand: ['A♦', 'K♦'],
+      bet: 0,
+      folded: false,
+      eliminated: false,
+      personality: {
+        style: 'unpredictable',
+        description: 'Wild and unpredictable'
+      }
+    },
+    {
+      id: '5',
+      name: 'Player 5',
+      chips: 950,
+      hand: ['T♠', 'T♣'],
+      bet: 0,
+      folded: false,
+      eliminated: false,
+      personality: {
+        style: 'aggressive',
+        description: 'All-in specialist'
+      }
+    },
+    {
+      id: '6',
+      name: 'Player 6',
+      chips: 1100,
+      hand: ['J♠', 'Q♠'],
+      bet: 0,
+      folded: false,
+      eliminated: false,
+      personality: {
+        style: 'conservative',
+        description: 'Methodical player'
+      }
+    }
   ],
   pot: 0,
-  communityCards: [],
+  communityCards: ['7♥', '2♣', '5♦'],
   currentBet: 0,
   currentPlayer: 0,
-  phase: 'preflop'
+  phase: 'flop'
 };
 
 const Index = () => {
@@ -58,7 +121,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background p-8">
-      {/* Game Header */}
       <header className="mb-8">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">
@@ -73,9 +135,7 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Game Area */}
       <main className="container mx-auto">
-        {/* Community Cards */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Community Cards</h2>
           <div className="flex gap-4 justify-center">
@@ -91,7 +151,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Players Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {gameState.players.map((player, index) => (
             <div
@@ -122,7 +181,6 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Player's Cards */}
               {!player.eliminated && (
                 <div className="flex gap-2 justify-center">
                   {player.hand.map((card, cardIndex) => (
@@ -138,7 +196,6 @@ const Index = () => {
                 </div>
               )}
 
-              {/* Player's Current Bet */}
               {player.bet > 0 && (
                 <div className="mt-4 text-center">
                   <span className="text-sm text-muted-foreground">
@@ -152,7 +209,6 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Game Phase Indicator */}
       <footer className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-4">
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
