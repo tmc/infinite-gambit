@@ -167,7 +167,9 @@ const Index = () => {
     setGameState({
       ...INITIAL_GAME_STATE,
       dealerPosition: (gameState.dealerPosition + 1) % gameState.players.length,
-      isDealing: true
+      isDealing: true,
+      phase: 'preflop',
+      lastAction: 'New hand dealt'
     });
 
     // Deal first card to each player
@@ -202,14 +204,36 @@ const Index = () => {
       }));
     }, 1500);
 
-    // Deal flop (first 3 community cards)
+    // Deal flop
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
+        phase: 'flop',
         communityCards: [shuffledDeck[10], shuffledDeck[11], shuffledDeck[12]],
-        isDealing: false
+        lastAction: 'Flop dealt'
       }));
     }, 2500);
+
+    // Deal turn
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        phase: 'turn',
+        communityCards: [...prev.communityCards, shuffledDeck[13]],
+        lastAction: 'Turn dealt'
+      }));
+    }, 3500);
+
+    // Deal river
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        phase: 'river',
+        communityCards: [...prev.communityCards, shuffledDeck[14]],
+        lastAction: 'River dealt',
+        isDealing: false
+      }));
+    }, 4500);
   };
 
   const dealerPos = getDealerPosition();
@@ -349,7 +373,7 @@ const Index = () => {
               <div
                 key={player.id}
                 className={`player-panel absolute w-[200px] min-h-[140px] -translate-x-1/2 -translate-y-1/2 ${
-                  index === gameState.currentPlayer ? 'active' : ''
+                  index === gameState.currentPlayer ? 'active ring-2 ring-primary animate-pulse' : ''
                 } ${player.id === 'dealer' ? 'dealer-seat' : ''}`}
                 style={{
                   left: `${left}%`,
@@ -425,21 +449,12 @@ const Index = () => {
                 {player.bet > 0 && (
                   <div className="mt-4 flex flex-col items-center">
                     <div className="chip-stack-3d relative">
-                      {[...Array(Math.min(3, Math.ceil(player.bet / 50)))].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-10 h-10"
-                          style={{
-                            transform: `translateY(${i * -2}px) translateZ(${i * 1}px) rotateX(55deg)`,
-                            zIndex: i
-                          }}
-                        >
-                          <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
-                        </div>
-                      ))}
                       <div className="relative w-10 h-10 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-xs font-bold text-white/90 transform-gpu rotateX(55deg)">
                         ${player.bet}
                       </div>
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-primary-foreground/80">
+                      Current bet
                     </div>
                   </div>
                 )}
@@ -476,12 +491,22 @@ const Index = () => {
 
       <footer className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="text-sm text-muted-foreground">
-            Phase: <span className="text-primary">{gameState.phase}</span>
+          <div className="flex gap-4 items-center">
+            <div className="text-sm text-muted-foreground">
+              Phase: <span className="text-primary font-semibold uppercase">{gameState.phase}</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Pot: <span className="text-primary font-semibold">${gameState.pot}</span>
+            </div>
+            {gameState.currentBet > 0 && (
+              <div className="text-sm text-muted-foreground">
+                Current bet: <span className="text-primary font-semibold">${gameState.currentBet}</span>
+              </div>
+            )}
           </div>
           {gameState.lastAction && (
             <div className="text-sm text-muted-foreground">
-              Last action: <span className="text-primary">{gameState.lastAction}</span>
+              Last action: <span className="text-primary font-semibold">{gameState.lastAction}</span>
             </div>
           )}
         </div>
