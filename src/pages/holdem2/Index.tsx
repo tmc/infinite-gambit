@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 
 type Player = {
@@ -135,77 +136,96 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto">
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Community Cards</h2>
-          <div className="flex gap-4 justify-center">
-            {gameState.communityCards.map((card, index) => (
-              <div
-                key={index}
-                className={`poker-card ${getCardColor(card)} deal-animation`}
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                {card}
-              </div>
-            ))}
+      <main className="container mx-auto relative">
+        {/* Poker Table */}
+        <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
+          {/* Table felt */}
+          <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
+            {/* Community Cards */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
+              {gameState.communityCards.map((card, index) => (
+                <div
+                  key={index}
+                  className={`poker-card ${getCardColor(card)} deal-animation`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                >
+                  {card}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {gameState.players.map((player, index) => (
-            <div
-              key={player.id}
-              className={`player-panel ${
-                index === gameState.currentPlayer ? 'active' : ''
-              }`}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-semibold text-lg">{player.name}</h3>
-                  <span
-                    className={`text-sm ${
-                      player.personality.style === 'aggressive'
-                        ? 'text-red-400'
-                        : player.personality.style === 'conservative'
-                        ? 'text-blue-400'
-                        : player.personality.style === 'balanced'
-                        ? 'text-green-400'
-                        : 'text-purple-400'
-                    }`}
-                  >
-                    {player.personality.description}
-                  </span>
-                </div>
-                <div className="chip bg-secondary border-primary/50 text-primary">
-                  ${player.chips}
-                </div>
-              </div>
+          {/* Players positioned in a circle */}
+          {gameState.players.map((player, index) => {
+            // Calculate position around the circle
+            const angle = (index * (360 / 6) - 90) * (Math.PI / 180);
+            const radius = 42; // Percentage from center
+            const left = 50 + radius * Math.cos(angle);
+            const top = 50 + radius * Math.sin(angle);
 
-              {!player.eliminated && (
-                <div className="flex gap-2 justify-center">
-                  {player.hand.map((card, cardIndex) => (
-                    <div
-                      key={cardIndex}
-                      className={`poker-card ${getCardColor(card)} ${
-                        player.folded ? 'opacity-50' : ''
+            return (
+              <div
+                key={player.id}
+                className={`player-panel absolute w-[200px] -translate-x-1/2 -translate-y-1/2 ${
+                  index === gameState.currentPlayer ? 'active' : ''
+                }`}
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                }}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-semibold text-lg">{player.name}</h3>
+                    <span
+                      className={`text-sm ${
+                        player.personality.style === 'aggressive'
+                          ? 'text-red-400'
+                          : player.personality.style === 'conservative'
+                          ? 'text-blue-400'
+                          : player.personality.style === 'balanced'
+                          ? 'text-green-400'
+                          : 'text-purple-400'
                       }`}
                     >
-                      {card}
-                    </div>
-                  ))}
+                      {player.personality.description}
+                    </span>
+                  </div>
+                  <div className="chip bg-secondary border-primary/50 text-primary">
+                    ${player.chips}
+                  </div>
                 </div>
-              )}
 
-              {player.bet > 0 && (
-                <div className="mt-4 text-center">
-                  <span className="text-sm text-muted-foreground">
-                    Current bet:
-                  </span>
-                  <span className="ml-2 text-primary">${player.bet}</span>
-                </div>
-              )}
-            </div>
-          ))}
+                {!player.eliminated && (
+                  <div className="flex gap-1 justify-center">
+                    {player.hand.map((card, cardIndex) => (
+                      <div
+                        key={cardIndex}
+                        className={`poker-card scale-75 ${getCardColor(card)} ${
+                          player.folded ? 'opacity-50' : ''
+                        } deal-animation`}
+                        style={{
+                          animationDelay: `${index * 0.15 + cardIndex * 0.15}s`,
+                          transformOrigin: 'center center',
+                        }}
+                      >
+                        {card}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {player.bet > 0 && (
+                  <div className="mt-2 text-center">
+                    <span className="text-sm text-muted-foreground">
+                      Current bet:
+                    </span>
+                    <span className="ml-2 text-primary">${player.bet}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </main>
 
