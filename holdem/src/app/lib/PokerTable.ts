@@ -123,22 +123,55 @@ export class PokerTable {
 
   call(player: PokerPlayer) {
     const toCall = this.currentBet - player.bet;
-    player.chips -= toCall;
-    player.bet = this.currentBet;
-    player.totalBets += toCall;
-    this.pot += toCall;
+    if (toCall > player.chips) {
+      // Player doesn't have enough chips to call - they go all-in with remaining chips
+      this.pot += player.chips;
+      player.totalBets += player.chips;
+      player.bet += player.chips;
+      player.chips = 0;
+    } else {
+      player.chips -= toCall;
+      player.bet = this.currentBet;
+      player.totalBets += toCall;
+      this.pot += toCall;
+    }
     player.handsPlayed++;
+    
+    this.checkElimination(player);
   }
 
   raise(player: PokerPlayer, amount: number) {
     const toCall = this.currentBet - player.bet;
     const raiseAmount = amount - this.currentBet;
-    player.chips -= (toCall + raiseAmount);
-    player.bet = amount;
-    player.totalBets += (toCall + raiseAmount);
-    this.pot += (toCall + raiseAmount);
-    this.currentBet = amount;
+    const totalNeeded = toCall + raiseAmount;
+
+    if (totalNeeded > player.chips) {
+      // Player doesn't have enough chips for the raise - they go all-in
+      this.pot += player.chips;
+      player.totalBets += player.chips;
+      player.bet += player.chips;
+      this.currentBet = player.bet;
+      player.chips = 0;
+    } else {
+      player.chips -= totalNeeded;
+      player.bet = amount;
+      player.totalBets += totalNeeded;
+      this.pot += totalNeeded;
+      this.currentBet = amount;
+    }
     player.handsPlayed++;
+    
+    this.checkElimination(player);
+  }
+
+  checkElimination(player: PokerPlayer) {
+    if (player.chips <= 0) {
+      console.log(`Player ${player.name} eliminated with no chips remaining`);
+      player.eliminated = true;
+      player.rank = this.players.filter(p => p.eliminated).length;
+      // Fold the player's hand since they're eliminated
+      player.folded = true;
+    }
   }
 
   dealCards() {
@@ -153,11 +186,15 @@ export class PokerTable {
       [deck[i], deck[j]] = [deck[j], deck[i]];
     }
     
-    // Deal hole cards
+    // Deal hole cards only to non-eliminated players
     this.players.forEach(p => {
       if (!p.eliminated) {
         p.hand = [deck.pop()!, deck.pop()!];
         p.folded = false;
+        p.bet = 0;
+      } else {
+        p.hand = [];
+        p.folded = true;
         p.bet = 0;
       }
     });
@@ -222,12 +259,14 @@ export class PokerTable {
         winner.biggestPot = this.pot;
       }
       
-      // Check for eliminations
+      // Reset pot after awarding
+      this.pot = 0;
+      
+      // Reset player states for next hand
       this.players.forEach(p => {
-        if (!p.eliminated && p.chips <= 0) {
-          console.log(`Player eliminated: ${p.name}`);
-          p.eliminated = true;
-          p.rank = this.players.filter(p => p.eliminated).length;
+        if (!p.eliminated) {
+          p.folded = false;
+          p.bet = 0;
         }
       });
       
