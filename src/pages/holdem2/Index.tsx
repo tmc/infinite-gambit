@@ -318,7 +318,7 @@ const Index = () => {
             return (
               <div
                 key={player.id}
-                className={`player-panel absolute w-[200px] -translate-x-1/2 -translate-y-1/2 ${
+                className={`player-panel absolute w-[200px] min-h-[140px] -translate-x-1/2 -translate-y-1/2 ${
                   index === gameState.currentPlayer ? 'active' : ''
                 } ${player.id === 'dealer' ? 'dealer-seat' : ''}`}
                 style={{
@@ -326,11 +326,11 @@ const Index = () => {
                   top: `${top}%`,
                 }}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-semibold text-lg">{player.name}</h3>
+                <div className="flex justify-between items-start mb-2 min-h-[80px]">
+                  <div className="flex flex-col h-full">
+                    <h3 className="font-semibold text-lg mb-1">{player.name}</h3>
                     <span
-                      className={`text-sm ${
+                      className={`text-sm mb-2 ${
                         player.personality.style === 'aggressive'
                           ? 'text-red-400'
                           : player.personality.style === 'conservative'
@@ -343,13 +343,13 @@ const Index = () => {
                       {player.personality.description}
                     </span>
                     {player.id !== 'dealer' && (
-                      <div className="mt-1 text-lg font-bold text-primary bg-primary/10 px-2 py-1 rounded-md inline-block">
+                      <div className="text-lg font-bold text-primary bg-primary/10 px-2 py-1 rounded-md inline-block">
                         ${player.chips}
                       </div>
                     )}
                   </div>
                   {player.id !== 'dealer' && (
-                    <div className="chip-stack-3d relative">
+                    <div className="chip-stack-3d relative shrink-0">
                       {[...Array(Math.min(3, Math.ceil(player.chips / 500)))].map((_, i) => (
                         <div
                           key={i}
