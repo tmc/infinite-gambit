@@ -168,10 +168,17 @@ const Index = () => {
   };
 
   const executeStep = (stepIndex: number) => {
+    if (!shuffledDeck.length) {
+      console.log('No shuffled deck available');
+      return;
+    }
+
     const getPlayerIndex = (offset: number) => {
       const pos = (gameState.dealerPosition + 1 + offset) % gameState.players.length;
       return pos >= 3 ? pos + 1 : pos;
     };
+
+    console.log('Executing step:', stepIndex, 'with first card:', shuffledDeck[0]); // Debug log
 
     switch (stepIndex) {
       case 0: // Initialize new hand
@@ -184,13 +191,15 @@ const Index = () => {
         break;
 
       case 1: // Deal first card to player 1
+        const firstPlayerIndex = getPlayerIndex(0);
+        console.log('Dealing first card to player index:', firstPlayerIndex, 'card:', shuffledDeck[0]); // Debug log
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
             ...player,
-            hand: index === getPlayerIndex(0) ? [shuffledDeck[0]] : player.hand
+            hand: index === firstPlayerIndex ? [shuffledDeck[0]] : player.hand
           })),
-          lastAction: `Dealing first card to ${prev.players[getPlayerIndex(0)].name}`,
+          lastAction: `Dealing first card to ${prev.players[firstPlayerIndex].name}`,
           stepIndex: 1
         }));
         break;
@@ -208,6 +217,42 @@ const Index = () => {
         break;
 
       // ... Continue for each player's first card
+
+      case 3: // Deal first card to player 3
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(2) ? [shuffledDeck[2]] : player.hand
+          })),
+          lastAction: `Dealing first card to ${prev.players[getPlayerIndex(2)].name}`,
+          stepIndex: 3
+        }));
+        break;
+
+      case 4: // Deal first card to player 5
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(3) ? [shuffledDeck[3]] : player.hand
+          })),
+          lastAction: `Dealing first card to ${prev.players[getPlayerIndex(3)].name}`,
+          stepIndex: 4
+        }));
+        break;
+
+      case 5: // Deal first card to player 6
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(4) ? [shuffledDeck[4]] : player.hand
+          })),
+          lastAction: `Dealing first card to ${prev.players[getPlayerIndex(4)].name}`,
+          stepIndex: 5
+        }));
+        break;
 
       case 6: // Start second round of dealing
         setGameState(prev => ({
@@ -231,6 +276,58 @@ const Index = () => {
         break;
 
       // ... Continue for each player's second card
+
+      case 8: // Deal second card to player 2
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(1) ? 
+              [...player.hand, shuffledDeck[6]] : player.hand
+          })),
+          lastAction: `Dealing second card to ${prev.players[getPlayerIndex(1)].name}`,
+          stepIndex: 8
+        }));
+        break;
+
+      case 9: // Deal second card to player 3
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(2) ? 
+              [...player.hand, shuffledDeck[7]] : player.hand
+          })),
+          lastAction: `Dealing second card to ${prev.players[getPlayerIndex(2)].name}`,
+          stepIndex: 9
+        }));
+        break;
+
+      case 10: // Deal second card to player 5
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(3) ? 
+              [...player.hand, shuffledDeck[8]] : player.hand
+          })),
+          lastAction: `Dealing second card to ${prev.players[getPlayerIndex(3)].name}`,
+          stepIndex: 10
+        }));
+        break;
+
+      case 11: // Deal second card to player 6
+        setGameState(prev => ({
+          ...prev,
+          players: prev.players.map((player, index) => ({
+            ...player,
+            hand: index === getPlayerIndex(4) ? 
+              [...player.hand, shuffledDeck[9]] : player.hand
+          })),
+          lastAction: `Dealing second card to ${prev.players[getPlayerIndex(4)].name}`,
+          stepIndex: 11
+        }));
+        break;
 
       case 12: // Deal flop
         setGameState(prev => ({
@@ -272,6 +369,7 @@ const Index = () => {
     if (gameState.stepIndex === -1) {
       // First step - initialize the deck
       const newDeck = shuffleDeck(createDeck());
+      console.log('New deck created:', newDeck); // Debug log
       setShuffledDeck(newDeck);
       setGameState(prev => ({
         ...INITIAL_GAME_STATE,
@@ -286,6 +384,7 @@ const Index = () => {
 
   const startNewRound = () => {
     const newDeck = shuffleDeck(createDeck());
+    console.log('Starting new round with deck:', newDeck); // Debug log
     setShuffledDeck(newDeck);
     setDeck(newDeck);
 
