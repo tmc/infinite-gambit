@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@chevtek/poker-engine": "1.1.1",
     "ai": "^4.1.41",
     "next": "15.1.7",
     "react": "^19.0.0",

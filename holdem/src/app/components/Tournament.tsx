@@ -1,24 +1,20 @@
 import { useEffect, useState } from 'react';
 
-type Card = {
-  rank: string;
-  suit: string;
-};
-
-type Player = {
-  id: string;
-  name: string;
-  chips: number;
-  hand: Card[];
-};
-
 type GameState = {
-  players: Player[];
+  players: {
+    id: string;
+    name: string;
+    chips: number;
+    hand: string[];
+    bet: number;
+    folded: boolean;
+  }[];
   pot: number;
-  communityCards: Card[];
+  communityCards: string[];
   currentBet: number;
   currentPlayer: number;
-  phase: 'preflop' | 'flop' | 'turn' | 'river' | 'showdown';
+  phase: string;
+  lastAction?: string;
 };
 
 type TournamentProps = {
@@ -82,6 +78,9 @@ export default function Tournament({ settings }: TournamentProps) {
       <div className="mb-4">
         <h2 className="text-xl font-bold">Phase: {gameState.phase}</h2>
         <p className="text-lg">Pot: ${gameState.pot}</p>
+        {gameState.lastAction && (
+          <p className="text-sm text-gray-600">Last Action: {gameState.lastAction}</p>
+        )}
       </div>
 
       <div className="mb-4">
@@ -89,7 +88,7 @@ export default function Tournament({ settings }: TournamentProps) {
         <div className="flex gap-2">
           {gameState.communityCards.map((card, i) => (
             <div key={i} className="p-2 border rounded">
-              {card.rank}{card.suit}
+              {card}
             </div>
           ))}
         </div>
@@ -101,14 +100,15 @@ export default function Tournament({ settings }: TournamentProps) {
             key={player.id}
             className={`p-4 border rounded ${
               i === gameState.currentPlayer ? 'border-blue-500' : ''
-            }`}
+            } ${player.folded ? 'opacity-50' : ''}`}
           >
             <h4 className="font-semibold">{player.name}</h4>
             <p>Chips: ${player.chips}</p>
+            {player.bet > 0 && <p className="text-sm">Bet: ${player.bet}</p>}
             <div className="flex gap-2 mt-2">
               {player.hand.map((card, j) => (
                 <div key={j} className="p-2 border rounded">
-                  {card.rank}{card.suit}
+                  {card}
                 </div>
               ))}
             </div>
