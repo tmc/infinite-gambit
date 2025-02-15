@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 
 type Player = {
@@ -119,6 +118,11 @@ const INITIAL_GAME_STATE: GameState = {
 
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
+  const [chipAnimations, setChipAnimations] = useState<{
+    fromId: string;
+    amount: number;
+    timestamp: number;
+  }[]>([]);
 
   const getCardColor = (card: string) => {
     return card.includes('♥') || card.includes('♦') ? 'red' : 'black';
@@ -148,6 +152,52 @@ const Index = () => {
   };
 
   const dealerPos = getDealerPosition();
+
+  const placeBet = (playerId: string, amount: number) => {
+    setGameState(prev => {
+      const updatedPlayers = prev.players.map(player => {
+        if (player.id === playerId) {
+          return {
+            ...player,
+            chips: player.chips - amount,
+            bet: player.bet + amount
+          };
+        }
+        return player;
+      });
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        pot: prev.pot + amount,
+        currentBet: Math.max(prev.currentBet, amount)
+      };
+    });
+
+    // Add chip animation
+    setChipAnimations(prev => [
+      ...prev,
+      { fromId: playerId, amount, timestamp: Date.now() }
+    ]);
+
+    // Clean up animation after it completes
+    setTimeout(() => {
+      setChipAnimations(prev => 
+        prev.filter(anim => anim.timestamp !== Date.now())
+      );
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (gameState.isDealing) {
+      const timer = setTimeout(() => {
+        placeBet('1', 50);
+        setTimeout(() => placeBet('2', 100), 1000);
+        setTimeout(() => placeBet('3', 150), 2000);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.isDealing]);
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -195,7 +245,6 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Dealer Button */}
           <div 
             className="absolute w-8 h-8 bg-white rounded-full border-2 border-primary flex items-center justify-center text-sm font-bold text-primary transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-lg z-10"
             style={{
@@ -281,6 +330,31 @@ const Index = () => {
               </div>
             );
           })}
+
+          {chipAnimations.map(({fromId, amount, timestamp}) => {
+            const sourcePlayer = gameState.players.find(p => p.id === fromId);
+            if (!sourcePlayer) return null;
+
+            const sourceIndex = gameState.players.indexOf(sourcePlayer);
+            const sourceAngle = (sourceIndex * (360 / 6) - 90) * (Math.PI / 180);
+            const sourceX = 50 + 42 * Math.cos(sourceAngle);
+            const sourceY = 50 + 42 * Math.sin(sourceAngle);
+
+            return (
+              <div
+                key={timestamp}
+                className="chip absolute bg-primary/20 border-2 border-primary text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md z-50 chip-animation"
+                style={{
+                  '--start-x': `${sourceX}%`,
+                  '--start-y': `${sourceY}%`,
+                  '--end-x': '50%',
+                  '--end-y': '50%',
+                } as React.CSSProperties}
+              >
+                ${amount}
+              </div>
+            );
+          })}
         </div>
       </main>
 
@@ -322,6 +396,40 @@ const Index = () => {
             padding: 1rem;
             border-radius: 0.5rem;
             backdrop-filter: blur(4px);
+          }
+
+          .chip-animation {
+            animation: moveChip 1s ease-out forwards;
+          }
+
+          @keyframes moveChip {
+            0% {
+              transform: translate(
+                calc(var(--start-x) - 50%),
+                calc(var(--start-y) - 50%)
+              );
+              opacity: 1;
+            }
+            100% {
+              transform: translate(
+                calc(var(--end-x) - 50%),
+                calc(var(--end-y) - 50%)
+              );
+              opacity: 0;
+            }
+          }
+
+          .chip-stack {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+          }
+
+          .chip {
+            transition: transform 0.3s ease;
+          }
+
+          .chip:hover {
+            transform: translateZ(10px) !important;
           }
         `}
       </style>
