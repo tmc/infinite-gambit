@@ -167,18 +167,27 @@ const Index = () => {
     };
   };
 
+  const getPlayerIndex = (offset: number) => {
+    let pos = (gameState.dealerPosition + 1 + offset) % gameState.players.length;
+    
+    if (pos >= 3) {
+      pos += 1;
+    }
+    
+    if (pos >= gameState.players.length) {
+      pos = pos % gameState.players.length;
+    }
+    
+    return pos;
+  };
+
   const executeStep = (stepIndex: number) => {
     if (!shuffledDeck.length) {
       console.log('No shuffled deck available');
       return;
     }
 
-    const getPlayerIndex = (offset: number) => {
-      const pos = (gameState.dealerPosition + 1 + offset) % gameState.players.length;
-      return pos >= 3 ? pos + 1 : pos;
-    };
-
-    console.log('Executing step:', stepIndex, 'with first card:', shuffledDeck[0]); // Debug log
+    console.log('Executing step:', stepIndex, 'Current dealer position:', gameState.dealerPosition); // Debug log
 
     switch (stepIndex) {
       case 0: // Initialize new hand
@@ -192,16 +201,21 @@ const Index = () => {
 
       case 1: // Deal first card to player 1
         const firstPlayerIndex = getPlayerIndex(0);
-        console.log('Dealing first card to player index:', firstPlayerIndex, 'card:', shuffledDeck[0]); // Debug log
-        setGameState(prev => ({
-          ...prev,
-          players: prev.players.map((player, index) => ({
-            ...player,
-            hand: index === firstPlayerIndex ? [shuffledDeck[0]] : player.hand
-          })),
-          lastAction: `Dealing first card to ${prev.players[firstPlayerIndex].name}`,
-          stepIndex: 1
-        }));
+        console.log('Dealing first card to player index:', firstPlayerIndex); // Debug log
+        
+        if (firstPlayerIndex >= 0 && firstPlayerIndex < gameState.players.length && firstPlayerIndex !== 3) {
+          setGameState(prev => ({
+            ...prev,
+            players: prev.players.map((player, index) => ({
+              ...player,
+              hand: index === firstPlayerIndex ? [shuffledDeck[0]] : player.hand
+            })),
+            lastAction: `Dealing first card to ${prev.players[firstPlayerIndex].name}`,
+            stepIndex: 1
+          }));
+        } else {
+          console.error('Invalid player index:', firstPlayerIndex);
+        }
         break;
 
       case 2: // Deal first card to player 2
@@ -384,24 +398,19 @@ const Index = () => {
 
   const startNewRound = () => {
     const newDeck = shuffleDeck(createDeck());
-    console.log('Starting new round with deck:', newDeck); // Debug log
+    console.log('Starting new round with dealer at position:', gameState.dealerPosition); // Debug log
     setShuffledDeck(newDeck);
     setDeck(newDeck);
 
     // Reset to initial state
-    setGameState({
+    setGameState(prev => ({
       ...INITIAL_GAME_STATE,
-      dealerPosition: (gameState.dealerPosition + 1) % gameState.players.length,
+      dealerPosition: (prev.dealerPosition + 1) % gameState.players.length,
       isDealing: true,
       phase: 'preflop',
       lastAction: 'New hand dealt',
       stepIndex: -1
-    });
-
-    // Now execute all steps with longer delays
-    for (let i = 0; i <= 14; i++) {
-      setTimeout(() => executeStep(i), i * 800); // Slower animation - 800ms between steps
-    }
+    }));
   };
 
   const dealerPos = getDealerPosition();
@@ -525,7 +534,7 @@ const Index = () => {
         <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
           <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
             <div 
-              className="absolute w-12 h-12 bg-white rounded-full border-4 border-[#9b87f5] flex items-center justify-center text-xl font-bold text-[#9b87f5] transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_15px_rgba(155,135,245,0.3)] z-10"
+              className="absolute w-12 h-12 bg-white rounded-full border-4 border-[#9b87f5] flex items-center justify-center text-xl font-bold text-[#9b87f5] transition-all duration-300 -translate-x-1/2 -translate-y-1/2"
               style={{
                 left: `${50 + 30 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
                 top: `${50 + 30 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
