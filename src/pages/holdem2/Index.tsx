@@ -342,6 +342,11 @@ const Index = () => {
                     >
                       {player.personality.description}
                     </span>
+                    {player.id !== 'dealer' && (
+                      <div className="mt-1 text-lg font-bold text-primary bg-primary/10 px-2 py-1 rounded-md inline-block">
+                        ${player.chips}
+                      </div>
+                    )}
                   </div>
                   {player.id !== 'dealer' && (
                     <div className="chip-stack-3d relative">
