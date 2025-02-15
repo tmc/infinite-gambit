@@ -1,0 +1,94 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 144 100% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 71% 45%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer components {
+  .poker-card {
+    @apply w-16 h-24 bg-white rounded-lg shadow-lg flex items-center justify-center font-bold text-2xl transition-all duration-300;
+  }
+
+  .poker-card.red {
+    @apply text-red-600;
+  }
+
+  .poker-card.black {
+    @apply text-gray-900;
+  }
+
+  .player-panel {
+    @apply bg-secondary/80 backdrop-blur-sm border border-border/50 rounded-xl p-4 transition-all duration-300;
+  }
+
+  .player-panel.active {
+    @apply ring-2 ring-primary/50 shadow-lg shadow-primary/20;
+  }
+
+  .chip-stack {
+    @apply flex items-center gap-1;
+  }
+
+  .chip {
+    @apply w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-md transition-all duration-300;
+  }
+}
+
+@keyframes dealCard {
+  from {
+    transform: translateY(-100%) rotate(-180deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+.deal-animation {
+  animation: dealCard 0.5s ease-out forwards;
+}
+
+@keyframes potGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(var(--primary), 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(var(--primary), 0.5));
+  }
+}
+
+.pot-glow {
+  animation: potGlow 2s ease-in-out infinite;
+}
