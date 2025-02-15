@@ -227,7 +227,7 @@ const Index = () => {
         <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
           <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-8">
                 {gameState.communityCards.map((card, index) => (
                   <div
                     key={index}
@@ -246,19 +246,23 @@ const Index = () => {
               </div>
               {gameState.pot > 0 && (
                 <div className="flex flex-col items-center">
-                  <div className="chip-stack relative mt-4">
+                  <div className="chip-stack-3d relative">
                     {[...Array(Math.min(5, Math.ceil(gameState.pot / 100)))].map((_, i) => (
                       <div
                         key={i}
-                        className="chip absolute bg-primary/20 border-2 border-primary text-primary w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
+                        className="absolute w-16 h-16"
                         style={{
-                          transform: `translateY(${i * -4}px)`,
+                          transform: `translateY(${i * -4}px) translateZ(${i * 2}px)`,
                           zIndex: i
                         }}
-                      />
+                      >
+                        <div className="w-full h-full rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                      </div>
                     ))}
+                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg flex items-center justify-center text-sm font-bold text-primary">
+                      ${gameState.pot}
+                    </div>
                   </div>
-                  <span className="text-sm text-primary mt-8">${gameState.pot}</span>
                 </div>
               )}
             </div>
@@ -309,18 +313,20 @@ const Index = () => {
                     </span>
                   </div>
                   {player.id !== 'dealer' && (
-                    <div className="chip-stack relative">
+                    <div className="chip-stack-3d relative">
                       {[...Array(Math.min(3, Math.ceil(player.chips / 500)))].map((_, i) => (
                         <div
                           key={i}
-                          className="chip absolute bg-secondary border-2 border-primary/50 text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
+                          className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -2}px)`,
+                            transform: `translateY(${i * -3}px) translateZ(${i * 2}px)`,
                             zIndex: i
                           }}
-                        />
+                        >
+                          <div className="w-full h-full rounded-full bg-gradient-to-b from-secondary/80 to-secondary/60 border-2 border-primary/50 shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                        </div>
                       ))}
-                      <div className="chip relative bg-secondary border-2 border-primary/50 text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-b from-secondary/80 to-secondary/60 border-2 border-primary/50 shadow-lg flex items-center justify-center text-xs font-bold text-primary">
                         ${player.chips}
                       </div>
                     </div>
@@ -352,18 +358,20 @@ const Index = () => {
 
                 {player.bet > 0 && (
                   <div className="mt-4 flex flex-col items-center">
-                    <div className="chip-stack relative">
+                    <div className="chip-stack-3d relative">
                       {[...Array(Math.min(3, Math.ceil(player.bet / 50)))].map((_, i) => (
                         <div
                           key={i}
-                          className="chip absolute bg-primary/20 border-2 border-primary text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
+                          className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -2}px)`,
+                            transform: `translateY(${i * -3}px) translateZ(${i * 2}px)`,
                             zIndex: i
                           }}
-                        />
+                        >
+                          <div className="w-full h-full rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                        </div>
                       ))}
-                      <div className="chip relative bg-primary/20 border-2 border-primary text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg flex items-center justify-center text-xs font-bold text-primary">
                         ${player.bet}
                       </div>
                     </div>
@@ -461,17 +469,19 @@ const Index = () => {
             }
           }
 
-          .chip-stack {
+          .chip-stack-3d {
             transform-style: preserve-3d;
             perspective: 1000px;
+            transform: rotateX(45deg);
           }
 
-          .chip {
+          .chip-stack-3d:hover {
+            transform: rotateX(45deg) scale(1.1);
+          }
+
+          .chip-stack-3d > * {
             transition: transform 0.3s ease;
-          }
-
-          .chip:hover {
-            transform: translateZ(10px) !important;
+            backface-visibility: hidden;
           }
         `}
       </style>
