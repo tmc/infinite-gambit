@@ -33,8 +33,8 @@ export default function Game() {
 
   return (
     <div className="min-h-screen">
-      <div className="p-4 bg-gray-100 dark:bg-gray-800">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
+      <div className="h-16 bg-gray-100 dark:bg-gray-800">
+        <div className="h-full flex justify-between items-center max-w-7xl mx-auto px-4">
           <h1 className="text-xl font-bold">Poker Tournament</h1>
           <div className="text-sm">
             <span className="mr-4">Players: {settings.playerCount}</span>
@@ -44,7 +44,7 @@ export default function Game() {
         </div>
       </div>
       
-      <Tournament />
+      <Tournament settings={settings} />
     </div>
   );
 } 
