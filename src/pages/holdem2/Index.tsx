@@ -176,33 +176,40 @@ const Index = () => {
       lastAction: 'New hand dealt'
     });
 
-    // Deal first card to each player
+    // Calculate starting positions relative to dealer
+    const getPlayerIndex = (offset: number) => {
+      const pos = (gameState.dealerPosition + 1 + offset) % gameState.players.length;
+      // Skip dealer position (index 3)
+      return pos >= 3 ? pos + 1 : pos;
+    };
+
+    // Deal first card to each player, starting after dealer
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
         players: prev.players.map((player, index) => ({
           ...player,
-          hand: index === 0 ? [shuffledDeck[0]] :
-                index === 1 ? [shuffledDeck[1]] :
-                index === 2 ? [shuffledDeck[2]] :
-                index === 4 ? [shuffledDeck[3]] :
-                index === 5 ? [shuffledDeck[4]] :
+          hand: index === getPlayerIndex(0) ? [shuffledDeck[0]] :
+                index === getPlayerIndex(1) ? [shuffledDeck[1]] :
+                index === getPlayerIndex(2) ? [shuffledDeck[2]] :
+                index === getPlayerIndex(3) ? [shuffledDeck[3]] :
+                index === getPlayerIndex(4) ? [shuffledDeck[4]] :
                 []
         }))
       }));
     }, 500);
 
-    // Deal second card to each player
+    // Deal second card to each player, maintaining the same order
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
         players: prev.players.map((player, index) => ({
           ...player,
-          hand: index === 0 ? [shuffledDeck[0], shuffledDeck[5]] :
-                index === 1 ? [shuffledDeck[1], shuffledDeck[6]] :
-                index === 2 ? [shuffledDeck[2], shuffledDeck[7]] :
-                index === 4 ? [shuffledDeck[3], shuffledDeck[8]] :
-                index === 5 ? [shuffledDeck[4], shuffledDeck[9]] :
+          hand: index === getPlayerIndex(0) ? [shuffledDeck[0], shuffledDeck[5]] :
+                index === getPlayerIndex(1) ? [shuffledDeck[1], shuffledDeck[6]] :
+                index === getPlayerIndex(2) ? [shuffledDeck[2], shuffledDeck[7]] :
+                index === getPlayerIndex(3) ? [shuffledDeck[3], shuffledDeck[8]] :
+                index === getPlayerIndex(4) ? [shuffledDeck[4], shuffledDeck[9]] :
                 player.hand
         }))
       }));
@@ -450,7 +457,7 @@ const Index = () => {
                           key={i}
                           className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -2}px) translateZ(${i * 1}px) rotateX(55deg)`,
+                            transform: `translateY(${i * -2}px) translateZ(${i * 1}px)`,
                             zIndex: i
                           }}
                         >
