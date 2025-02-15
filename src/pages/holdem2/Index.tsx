@@ -135,7 +135,8 @@ const Index = () => {
   const startNewRound = () => {
     setGameState(prev => ({
       ...prev,
-      isDealing: true
+      isDealing: true,
+      dealerPosition: (prev.dealerPosition + 1) % prev.players.length
     }));
 
     setTimeout(() => {
@@ -192,6 +193,17 @@ const Index = () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Dealer Button */}
+          <div 
+            className="absolute w-8 h-8 bg-white rounded-full border-2 border-primary flex items-center justify-center text-sm font-bold text-primary transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-lg z-10"
+            style={{
+              left: `${50 + 35 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+              top: `${50 + 35 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+            }}
+          >
+            D
           </div>
 
           {gameState.players.map((player, index) => {
@@ -285,32 +297,34 @@ const Index = () => {
         </div>
       </footer>
 
-      <style jsx>{`
-        .deal-animation {
-          animation: dealCard 0.5s ease-out forwards;
-        }
-        
-        @keyframes dealCard {
-          0% {
-            transform: translate(
-              calc(var(--deal-from-x) - 50%),
-              calc(var(--deal-from-y) - 50%)
-            ) scale(0.75);
-            opacity: 0;
+      <style>
+        {`
+          .deal-animation {
+            animation: dealCard 0.5s ease-out forwards;
           }
-          100% {
-            transform: translate(0, 0) scale(1);
-            opacity: 1;
+          
+          @keyframes dealCard {
+            0% {
+              transform: translate(
+                calc(var(--deal-from-x) - 50%),
+                calc(var(--deal-from-y) - 50%)
+              ) scale(0.75);
+              opacity: 0;
+            }
+            100% {
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
           }
-        }
-        
-        .dealer-seat {
-          background: rgba(255, 255, 255, 0.1);
-          padding: 1rem;
-          border-radius: 0.5rem;
-          backdrop-filter: blur(4px);
-        }
-      `}</style>
+          
+          .dealer-seat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            backdrop-filter: blur(4px);
+          }
+        `}
+      </style>
     </div>
   );
 };
