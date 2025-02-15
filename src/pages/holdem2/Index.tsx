@@ -69,16 +69,16 @@ const INITIAL_GAME_STATE: GameState = {
       }
     },
     {
-      id: '4',
-      name: 'Player 4',
-      chips: 1500,
-      hand: ['A♦', 'K♦'],
+      id: 'dealer',
+      name: 'Dealer',
+      chips: 0,
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
       personality: {
-        style: 'unpredictable',
-        description: 'Wild and unpredictable'
+        style: 'balanced',
+        description: 'House Dealer'
       }
     },
     {
@@ -113,7 +113,7 @@ const INITIAL_GAME_STATE: GameState = {
   currentBet: 0,
   currentPlayer: 0,
   phase: 'flop',
-  dealerPosition: 0,
+  dealerPosition: 3, // Fixed dealer position
   isDealing: false
 };
 
@@ -124,21 +124,29 @@ const Index = () => {
     return card.includes('♥') || card.includes('♦') ? 'red' : 'black';
   };
 
+  const getDealerPosition = () => {
+    const dealerAngle = (3 * (360 / 6) - 90) * (Math.PI / 180); // Position 4 (index 3)
+    return {
+      x: 50 + 42 * Math.cos(dealerAngle),
+      y: 50 + 42 * Math.sin(dealerAngle)
+    };
+  };
+
   const startNewRound = () => {
     setGameState(prev => ({
       ...prev,
-      isDealing: true,
-      dealerPosition: (prev.dealerPosition + 1) % prev.players.length
+      isDealing: true
     }));
 
-    // Reset dealing animation after cards are dealt
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
         isDealing: false
       }));
-    }, 2000); // Adjust timing based on animation duration
+    }, 2000);
   };
+
+  const dealerPos = getDealerPosition();
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -175,8 +183,10 @@ const Index = () => {
                     gameState.isDealing ? 'deal-animation' : ''
                   }`}
                   style={{ 
-                    animationDelay: gameState.isDealing ? `${(gameState.players.length * 2 + index) * 0.15}s` : '0s'
-                  }}
+                    animationDelay: gameState.isDealing ? `${(gameState.players.length * 2 + index) * 0.15}s` : '0s',
+                    '--deal-from-x': `${dealerPos.x}%`,
+                    '--deal-from-y': `${dealerPos.y}%`,
+                  } as React.CSSProperties}
                 >
                   {card}
                 </div>
@@ -190,18 +200,12 @@ const Index = () => {
             const left = 50 + radius * Math.cos(angle);
             const top = 50 + radius * Math.sin(angle);
 
-            // Calculate dealer button position
-            const dealerButtonAngle = ((gameState.dealerPosition * (360 / 6)) - 90) * (Math.PI / 180);
-            const dealerButtonRadius = 38; // Slightly inside the player circle
-            const dealerButtonLeft = 50 + dealerButtonRadius * Math.cos(dealerButtonAngle);
-            const dealerButtonTop = 50 + dealerButtonRadius * Math.sin(dealerButtonAngle);
-
             return (
               <div
                 key={player.id}
                 className={`player-panel absolute w-[200px] -translate-x-1/2 -translate-y-1/2 ${
                   index === gameState.currentPlayer ? 'active' : ''
-                }`}
+                } ${player.id === 'dealer' ? 'dealer-seat' : ''}`}
                 style={{
                   left: `${left}%`,
                   top: `${top}%`,
@@ -224,12 +228,14 @@ const Index = () => {
                       {player.personality.description}
                     </span>
                   </div>
-                  <div className="chip bg-secondary border-primary/50 text-primary">
-                    ${player.chips}
-                  </div>
+                  {player.id !== 'dealer' && (
+                    <div className="chip bg-secondary border-primary/50 text-primary">
+                      ${player.chips}
+                    </div>
+                  )}
                 </div>
 
-                {!player.eliminated && (
+                {!player.eliminated && player.id !== 'dealer' && (
                   <div className="flex gap-1 justify-center">
                     {player.hand.map((card, cardIndex) => (
                       <div
@@ -242,7 +248,9 @@ const Index = () => {
                             ? `${((index * 2) + cardIndex) * 0.15}s` 
                             : '0s',
                           transformOrigin: 'center center',
-                        }}
+                          '--deal-from-x': `${dealerPos.x}%`,
+                          '--deal-from-y': `${dealerPos.y}%`,
+                        } as React.CSSProperties}
                       >
                         {card}
                       </div>
@@ -261,17 +269,6 @@ const Index = () => {
               </div>
             );
           })}
-
-          {/* Dealer Button */}
-          <div 
-            className="absolute w-8 h-8 bg-white rounded-full border-2 border-primary flex items-center justify-center text-sm font-bold text-primary transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-lg"
-            style={{
-              left: `${50 + 38 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
-              top: `${50 + 38 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
-            }}
-          >
-            D
-          </div>
         </div>
       </main>
 
@@ -287,6 +284,33 @@ const Index = () => {
           )}
         </div>
       </footer>
+
+      <style jsx>{`
+        .deal-animation {
+          animation: dealCard 0.5s ease-out forwards;
+        }
+        
+        @keyframes dealCard {
+          0% {
+            transform: translate(
+              calc(var(--deal-from-x) - 50%),
+              calc(var(--deal-from-y) - 50%)
+            ) scale(0.75);
+            opacity: 0;
+          }
+          100% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+        }
+        
+        .dealer-seat {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 1rem;
+          border-radius: 0.5rem;
+          backdrop-filter: blur(4px);
+        }
+      `}</style>
     </div>
   );
 };
