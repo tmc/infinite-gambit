@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import EventStream from './EventStream';
 
+type PlayerStyle = 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
+
+type PlayerPersonality = {
+  style: PlayerStyle;
+  riskTolerance: number;
+  bluffFrequency: number;
+  name: string;
+  description: string;
+};
+
 type Player = {
   id: string;
   name: string;
@@ -14,13 +24,9 @@ type Player = {
   biggestPot: number;
   eliminated: boolean;
   rank?: number;
-  personality: {
-    style: 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
-    riskTolerance: number;
-    bluffFrequency: number;
-    name: string;
-    description: string;
-  };
+  personality: PlayerPersonality;
+  prevChips?: number;
+  position?: number;
 };
 
 type GameState = {
@@ -35,21 +41,55 @@ type GameState = {
   winners?: Player[];
 };
 
-type TournamentProps = {
-  settings?: {
-    playerCount: number;
-    startingChips: number;
-    blinds: {
-      small: number;
-      big: number;
-    };
+type GameSettings = {
+  playerCount: number;
+  startingChips: number;
+  blinds: {
+    small: number;
+    big: number;
   };
 };
+
+type TournamentProps = {
+  settings?: GameSettings;
+};
+
+const styleColors = {
+  aggressive: {
+    text: 'text-red-400',
+    bg: 'bg-red-900',
+    border: 'border-red-700',
+    textHighlight: 'text-red-300'
+  },
+  conservative: {
+    text: 'text-blue-400',
+    bg: 'bg-blue-900',
+    border: 'border-blue-700',
+    textHighlight: 'text-blue-300'
+  },
+  balanced: {
+    text: 'text-green-400',
+    bg: 'bg-green-900',
+    border: 'border-green-700',
+    textHighlight: 'text-green-300'
+  },
+  unpredictable: {
+    text: 'text-purple-400',
+    bg: 'bg-purple-900',
+    border: 'border-purple-700',
+    textHighlight: 'text-purple-300'
+  }
+} as const;
+
+const positionColors = {
+  1: 'bg-yellow-900 text-yellow-300 border-yellow-500',
+  2: 'bg-gray-700 text-gray-300 border-gray-500',
+  3: 'bg-orange-900 text-orange-300 border-orange-500'
+} as const;
 
 export default function Tournament({ settings }: TournamentProps) {
   const [gameState, setGameState] = useState<GameState | null>(null);
 
-  // Get top 3 players sorted by chips
   const getTopPlayers = () => {
     if (!gameState) return [];
     return [...gameState.players]
@@ -58,6 +98,9 @@ export default function Tournament({ settings }: TournamentProps) {
       .slice(0, 3)
       .map((p, i) => ({ ...p, position: i + 1 }));
   };
+
+  const getStyleColors = (style: PlayerStyle) => styleColors[style];
+  const getPositionColors = (position: number) => positionColors[position as keyof typeof positionColors];
 
   useEffect(() => {
     const startGame = async () => {
@@ -87,13 +130,10 @@ export default function Tournament({ settings }: TournamentProps) {
           for (const event of events) {
             const parsed = JSON.parse(event);
             if (parsed.type === 'gameState') {
-              // Use functional update to avoid race conditions
               setGameState(prev => ({
                 ...parsed.data,
-                // Preserve previous state for smooth transitions
-                players: parsed.data.players.map((player: GameState['players'][0]) => ({
+                players: parsed.data.players.map((player: Player) => ({
                   ...player,
-                  // Keep previous chip count for animation
                   prevChips: prev?.players.find(p => p.id === player.id)?.chips ?? player.chips,
                 }))
               }));
@@ -108,11 +148,13 @@ export default function Tournament({ settings }: TournamentProps) {
     startGame();
   }, [settings]);
 
-  if (!gameState) return (
-    <div className="flex h-screen items-center justify-center bg-gray-900 text-gray-100">
-      <div className="text-xl">Loading tournament...</div>
-    </div>
-  );
+  if (!gameState) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-900 text-gray-100">
+        <div className="text-xl">Loading tournament...</div>
+      </div>
+    );
+  }
 
   const topPlayers = getTopPlayers();
 
@@ -132,7 +174,7 @@ export default function Tournament({ settings }: TournamentProps) {
             </div>
           </div>
 
-          {/* Top Players Section - Fixed height */}
+          {/* Top Players Section */}
           <div className="bg-gray-800 border border-cyan-900 rounded-lg p-3 h-24">
             <h3 className="text-sm font-semibold text-cyan-400 mb-2">Top Players</h3>
             <div className="grid grid-cols-3 gap-2">
@@ -142,22 +184,15 @@ export default function Tournament({ settings }: TournamentProps) {
                   className="flex items-center gap-2 p-2 bg-gray-800 border border-gray-700 rounded"
                 >
                   <div className={`
-                    w-6 h-6 flex-none flex items-center justify-center rounded-full text-sm font-bold
-                    ${player.position === 1 ? 'bg-yellow-900 text-yellow-300 border border-yellow-500' :
-                      player.position === 2 ? 'bg-gray-700 text-gray-300 border border-gray-500' :
-                      'bg-orange-900 text-orange-300 border border-orange-500'}
+                    w-6 h-6 flex-none flex items-center justify-center rounded-full text-sm font-bold border
+                    ${player.position ? getPositionColors(player.position) : ''}
                   `}>
                     #{player.position}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="truncate text-sm font-medium text-cyan-300">
                       {player.name}
-                      <span className={`ml-2 text-xs ${
-                        player.personality.style === 'aggressive' ? 'text-red-400' :
-                        player.personality.style === 'conservative' ? 'text-blue-400' :
-                        player.personality.style === 'balanced' ? 'text-green-400' :
-                        'text-purple-400'
-                      }`}>
+                      <span className={`ml-2 text-xs ${getStyleColors(player.personality.style).text}`}>
                         {player.personality.style}
                       </span>
                     </div>
@@ -168,7 +203,7 @@ export default function Tournament({ settings }: TournamentProps) {
             </div>
           </div>
 
-          {/* Last Action - Fixed height */}
+          {/* Last Action */}
           <div className="h-8">
             {gameState.lastAction && (
               <p className="text-sm text-cyan-300 bg-gray-800 border border-cyan-900 p-2 rounded">
@@ -178,7 +213,7 @@ export default function Tournament({ settings }: TournamentProps) {
           </div>
         </div>
 
-        {/* Scrollable game content with fixed header */}
+        {/* Game Content */}
         <div className="flex-1 overflow-y-auto mt-4 min-h-0">
           {gameState.winners ? (
             <div className="bg-gray-800 border border-green-900 p-4 rounded-lg">
@@ -190,12 +225,7 @@ export default function Tournament({ settings }: TournamentProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-cyan-300 truncate">{winner.name}</h3>
-                        <span className={`text-xs px-2 py-1 rounded flex-none ${
-                          winner.personality.style === 'aggressive' ? 'bg-red-900 text-red-300' :
-                          winner.personality.style === 'conservative' ? 'bg-blue-900 text-blue-300' :
-                          winner.personality.style === 'balanced' ? 'bg-green-900 text-green-300' :
-                          'bg-purple-900 text-purple-300'
-                        }`}>
+                        <span className={`text-xs px-2 py-1 rounded flex-none ${getStyleColors(winner.personality.style).bg} ${getStyleColors(winner.personality.style).textHighlight}`}>
                           {winner.personality.style}
                         </span>
                       </div>
@@ -214,7 +244,7 @@ export default function Tournament({ settings }: TournamentProps) {
             </div>
           ) : (
             <>
-              {/* Community Cards - Fixed height */}
+              {/* Community Cards */}
               <div className="h-24 mb-4">
                 <h3 className="text-lg font-semibold text-cyan-400 mb-2">Community Cards</h3>
                 <div className="flex gap-2 h-16 bg-gray-800 border border-green-900 p-3 rounded-lg items-center">
@@ -226,7 +256,7 @@ export default function Tournament({ settings }: TournamentProps) {
                 </div>
               </div>
 
-              {/* Player Grid - Fixed height cards */}
+              {/* Player Grid */}
               <div className="grid grid-cols-2 gap-4">
                 {gameState.players.map((player, i) => (
                   <div
@@ -240,12 +270,7 @@ export default function Tournament({ settings }: TournamentProps) {
                     <div className="flex justify-between items-start h-8">
                       <div className="min-w-0">
                         <h4 className="font-semibold text-cyan-300 truncate">{player.name}</h4>
-                        <span className={`text-xs truncate block ${
-                          player.personality.style === 'aggressive' ? 'text-red-400' :
-                          player.personality.style === 'conservative' ? 'text-blue-400' :
-                          player.personality.style === 'balanced' ? 'text-green-400' :
-                          'text-purple-400'
-                        }`}>
+                        <span className={`text-xs truncate block ${getStyleColors(player.personality.style).text}`}>
                           {player.personality.description}
                         </span>
                       </div>
@@ -287,7 +312,7 @@ export default function Tournament({ settings }: TournamentProps) {
         </div>
       </div>
       
-      {/* Event Stream Side Panel - Fixed width */}
+      {/* Event Stream Side Panel */}
       <div className="w-80 flex-none border-l border-cyan-900 p-4 bg-gray-900 overflow-hidden">
         <EventStream gameState={gameState} className="h-full" />
       </div>
