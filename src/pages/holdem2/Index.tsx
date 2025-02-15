@@ -226,22 +226,41 @@ const Index = () => {
       <main className="container mx-auto relative">
         <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
           <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
-              {gameState.communityCards.map((card, index) => (
-                <div
-                  key={index}
-                  className={`poker-card ${getCardColor(card)} ${
-                    gameState.isDealing ? 'deal-animation' : ''
-                  }`}
-                  style={{ 
-                    animationDelay: gameState.isDealing ? `${(gameState.players.length * 2 + index) * 0.15}s` : '0s',
-                    '--deal-from-x': `${dealerPos.x}%`,
-                    '--deal-from-y': `${dealerPos.y}%`,
-                  } as React.CSSProperties}
-                >
-                  {card}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
+              <div className="flex gap-2">
+                {gameState.communityCards.map((card, index) => (
+                  <div
+                    key={index}
+                    className={`poker-card ${getCardColor(card)} ${
+                      gameState.isDealing ? 'deal-animation' : ''
+                    }`}
+                    style={{ 
+                      animationDelay: gameState.isDealing ? `${(gameState.players.length * 2 + index) * 0.15}s` : '0s',
+                      '--deal-from-x': `${dealerPos.x}%`,
+                      '--deal-from-y': `${dealerPos.y}%`,
+                    } as React.CSSProperties}
+                  >
+                    {card}
+                  </div>
+                ))}
+              </div>
+              {gameState.pot > 0 && (
+                <div className="flex flex-col items-center">
+                  <div className="chip-stack relative mt-4">
+                    {[...Array(Math.min(5, Math.ceil(gameState.pot / 100)))].map((_, i) => (
+                      <div
+                        key={i}
+                        className="chip absolute bg-primary/20 border-2 border-primary text-primary w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
+                        style={{
+                          transform: `translateY(${i * -4}px)`,
+                          zIndex: i
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-primary mt-8">${gameState.pot}</span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -290,8 +309,20 @@ const Index = () => {
                     </span>
                   </div>
                   {player.id !== 'dealer' && (
-                    <div className="chip bg-secondary border-primary/50 text-primary">
-                      ${player.chips}
+                    <div className="chip-stack relative">
+                      {[...Array(Math.min(3, Math.ceil(player.chips / 500)))].map((_, i) => (
+                        <div
+                          key={i}
+                          className="chip absolute bg-secondary border-2 border-primary/50 text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
+                          style={{
+                            transform: `translateY(${i * -2}px)`,
+                            zIndex: i
+                          }}
+                        />
+                      ))}
+                      <div className="chip relative bg-secondary border-2 border-primary/50 text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                        ${player.chips}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -320,11 +351,22 @@ const Index = () => {
                 )}
 
                 {player.bet > 0 && (
-                  <div className="mt-2 text-center">
-                    <span className="text-sm text-muted-foreground">
-                      Current bet:
-                    </span>
-                    <span className="ml-2 text-primary">${player.bet}</span>
+                  <div className="mt-4 flex flex-col items-center">
+                    <div className="chip-stack relative">
+                      {[...Array(Math.min(3, Math.ceil(player.bet / 50)))].map((_, i) => (
+                        <div
+                          key={i}
+                          className="chip absolute bg-primary/20 border-2 border-primary text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
+                          style={{
+                            transform: `translateY(${i * -2}px)`,
+                            zIndex: i
+                          }}
+                        />
+                      ))}
+                      <div className="chip relative bg-primary/20 border-2 border-primary text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                        ${player.bet}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
