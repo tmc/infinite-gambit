@@ -137,11 +137,26 @@ const Index = () => {
   };
 
   const startNewRound = () => {
-    setGameState(prev => ({
-      ...prev,
-      isDealing: true,
-      dealerPosition: (prev.dealerPosition + 1) % prev.players.length
-    }));
+    setGameState({
+      ...INITIAL_GAME_STATE,
+      dealerPosition: (gameState.dealerPosition + 1) % gameState.players.length,
+      isDealing: true
+    });
+
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        players: prev.players.map((player, index) => ({
+          ...player,
+          hand: index === 0 ? ['A♠'] :
+                index === 1 ? ['Q♥'] :
+                index === 2 ? ['8♣'] :
+                index === 4 ? ['T♠'] :
+                index === 5 ? ['J♠'] :
+                []
+        }))
+      }));
+    }, 500);
 
     setTimeout(() => {
       setGameState(prev => ({
@@ -153,12 +168,18 @@ const Index = () => {
                 index === 2 ? ['8♣', '8♦'] :
                 index === 4 ? ['T♠', 'T♣'] :
                 index === 5 ? ['J♠', 'Q♠'] :
-                []
-        })),
+                player.hand
+        }))
+      }));
+    }, 1500);
+
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
         communityCards: ['7♥', '2♣', '5♦'],
         isDealing: false
       }));
-    }, 2000);
+    }, 2500);
   };
 
   const dealerPos = getDealerPosition();
@@ -434,7 +455,7 @@ const Index = () => {
       <style>
         {`
           .deal-animation {
-            animation: dealCard 0.5s ease-out forwards;
+            animation: dealCard 0.3s ease-out forwards;
           }
           
           @keyframes dealCard {
@@ -442,11 +463,11 @@ const Index = () => {
               transform: translate(
                 calc(var(--deal-from-x) - 50%),
                 calc(var(--deal-from-y) - 50%)
-              ) scale(0.75);
+              ) scale(0.75) rotate(180deg);
               opacity: 0;
             }
             100% {
-              transform: translate(0, 0) scale(1);
+              transform: translate(0, 0) scale(1) rotate(0deg);
               opacity: 1;
             }
           }
