@@ -55,27 +55,32 @@ export class PokerTable {
     }
   }
 
-  simulatePlayerAction(player: PokerPlayer): { action: string; amount?: number } {
-    const handStrength = player.agent.calculateHandStrength(player.hand, this.communityCards);
-    const potOdds = this.currentBet / this.pot;
-    const position = this.players.indexOf(player);
-    const isLatePosition = position >= this.players.length - 2;
-
-    const decision = player.agent.decideAction({
-      handStrength,
-      potOdds,
-      position: isLatePosition ? 'late' : 'early',
-      currentBet: this.currentBet,
-      pot: this.pot,
-      playerChips: player.chips,
+  async simulatePlayerAction(player: PokerPlayer): Promise<{ action: string; amount?: number }> {
+    const context = {
+      hand: player.hand,
+      communityCards: this.communityCards,
       phase: this.phase,
-      numActivePlayers: this.players.filter(p => !p.folded && !p.eliminated).length
-    });
+      pot: this.pot,
+      currentBet: this.currentBet,
+      playerChips: player.chips,
+      position: this.players.indexOf(player) >= this.players.length - 2 ? 'late' : 'early',
+      numActivePlayers: this.players.filter(p => !p.folded && !p.eliminated).length,
+      opponents: this.players
+        .filter(p => p.id !== player.id)
+        .map(p => ({
+          name: p.name,
+          chips: p.chips,
+          bet: p.bet,
+          folded: p.folded,
+          eliminated: p.eliminated,
+          personality: p.personality
+        }))
+    };
 
-    return decision;
+    return await player.agent.decideAction(context);
   }
 
-  handlePlayerTurn() {
+  async handlePlayerTurn() {
     const currentPlayer = this.players[this.currentPlayerIndex];
     if (!currentPlayer || currentPlayer.folded || currentPlayer.eliminated) {
       console.log(`Skipping ${currentPlayer?.name || 'unknown'} (folded: ${currentPlayer?.folded}, eliminated: ${currentPlayer?.eliminated})`);
@@ -88,7 +93,7 @@ export class PokerTable {
     console.log('Chips:', currentPlayer.chips);
     console.log('Current bet:', currentPlayer.bet);
 
-    const decision = this.simulatePlayerAction(currentPlayer);
+    const decision = await this.simulatePlayerAction(currentPlayer);
     console.log('Decision:', decision);
     const commentary = currentPlayer.agent.getCommentary(decision);
     
