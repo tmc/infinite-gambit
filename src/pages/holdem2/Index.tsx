@@ -154,7 +154,8 @@ const Index = () => {
   const [chipAnimations, setChipAnimations] = useState<ChipAnimation[]>([]);
   const [shuffledDeck, setShuffledDeck] = useState<string[]>([]);
 
-  const getCardColor = (card: string) => {
+  const getCardColor = (card: string | undefined) => {
+    if (!card) return 'black'; // Default color if no card
     return card.includes('♥') || card.includes('♦') ? 'red' : 'black';
   };
 
