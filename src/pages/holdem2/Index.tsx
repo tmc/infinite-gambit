@@ -252,14 +252,14 @@ const Index = () => {
                         key={i}
                         className="absolute w-16 h-16"
                         style={{
-                          transform: `translateY(${i * -4}px) translateZ(${i * 2}px)`,
+                          transform: `translateY(${i * -2}px)`,
                           zIndex: i
                         }}
                       >
-                        <div className="w-full h-full rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                        <div className="w-full h-full rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] transform-gpu transition-all duration-200" />
                       </div>
                     ))}
-                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg flex items-center justify-center text-sm font-bold text-primary">
+                    <div className="relative w-16 h-16 rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] flex items-center justify-center text-sm font-bold text-white/90">
                       ${gameState.pot}
                     </div>
                   </div>
@@ -319,14 +319,14 @@ const Index = () => {
                           key={i}
                           className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -3}px) translateZ(${i * 2}px)`,
+                            transform: `translateY(${i * -2}px)`,
                             zIndex: i
                           }}
                         >
-                          <div className="w-full h-full rounded-full bg-gradient-to-b from-secondary/80 to-secondary/60 border-2 border-primary/50 shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                          <div className="w-full h-full rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] transform-gpu transition-all duration-200" />
                         </div>
                       ))}
-                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-b from-secondary/80 to-secondary/60 border-2 border-primary/50 shadow-lg flex items-center justify-center text-xs font-bold text-primary">
+                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] flex items-center justify-center text-xs font-bold text-white/90">
                         ${player.chips}
                       </div>
                     </div>
@@ -364,14 +364,14 @@ const Index = () => {
                           key={i}
                           className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -3}px) translateZ(${i * 2}px)`,
+                            transform: `translateY(${i * -2}px)`,
                             zIndex: i
                           }}
                         >
-                          <div className="w-full h-full rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                          <div className="w-full h-full rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] transform-gpu transition-all duration-200" />
                         </div>
                       ))}
-                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg flex items-center justify-center text-xs font-bold text-primary">
+                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] flex items-center justify-center text-xs font-bold text-white/90">
                         ${player.bet}
                       </div>
                     </div>
@@ -472,16 +472,14 @@ const Index = () => {
           .chip-stack-3d {
             transform-style: preserve-3d;
             perspective: 1000px;
-            transform: rotateX(45deg);
-          }
-
-          .chip-stack-3d:hover {
-            transform: rotateX(45deg) scale(1.1);
           }
 
           .chip-stack-3d > * {
-            transition: transform 0.3s ease;
-            backface-visibility: hidden;
+            transition: all 0.2s ease;
+          }
+
+          .chip-stack-3d:hover > * {
+            transform: translateY(0) !important;
           }
         `}
       </style>
