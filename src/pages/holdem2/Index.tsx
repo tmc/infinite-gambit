@@ -26,6 +26,14 @@ type GameState = {
   isDealing: boolean;
 };
 
+type ChipAnimation = {
+  fromId: string;
+  toId?: string;
+  amount: number;
+  timestamp: number;
+  type: 'bet' | 'collect';
+};
+
 const INITIAL_GAME_STATE: GameState = {
   players: [
     {
@@ -141,11 +149,7 @@ const shuffleDeck = (deck: string[]) => {
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [deck, setDeck] = useState<string[]>([]);
-  const [chipAnimations, setChipAnimations] = useState<{
-    fromId: string;
-    amount: number;
-    timestamp: number;
-  }[]>([]);
+  const [chipAnimations, setChipAnimations] = useState<ChipAnimation[]>([]);
 
   const getCardColor = (card: string) => {
     return card.includes('♥') || card.includes('♦') ? 'red' : 'black';
@@ -262,7 +266,43 @@ const Index = () => {
     // Add chip animation
     setChipAnimations(prev => [
       ...prev,
-      { fromId: playerId, amount, timestamp: Date.now() }
+      { fromId: playerId, amount, timestamp: Date.now(), type: 'bet' }
+    ]);
+
+    // Clean up animation after it completes
+    setTimeout(() => {
+      setChipAnimations(prev => 
+        prev.filter(anim => anim.timestamp !== Date.now())
+      );
+    }, 1000);
+  };
+
+  const collectWinnings = (playerId: string, amount: number) => {
+    setGameState(prev => {
+      const updatedPlayers = prev.players.map(player => {
+        if (player.id === playerId) {
+          return {
+            ...player,
+            chips: player.chips + amount,
+            bet: 0
+          };
+        }
+        return { ...player, bet: 0 };
+      });
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        pot: 0,
+        currentBet: 0,
+        lastAction: `${updatedPlayers.find(p => p.id === playerId)?.name} wins ${amount}`
+      };
+    });
+
+    // Add collect animation
+    setChipAnimations(prev => [
+      ...prev,
+      { fromId: 'pot', toId: playerId, amount, timestamp: Date.now(), type: 'collect' }
     ]);
 
     // Clean up animation after it completes
@@ -279,6 +319,7 @@ const Index = () => {
         placeBet('1', 50);
         setTimeout(() => placeBet('2', 100), 1000);
         setTimeout(() => placeBet('3', 150), 2000);
+        setTimeout(() => collectWinnings('2', 300), 5000);
       }, 2500);
       return () => clearTimeout(timer);
     }
@@ -462,14 +503,39 @@ const Index = () => {
             );
           })}
 
-          {chipAnimations.map(({fromId, amount, timestamp}) => {
-            const sourcePlayer = gameState.players.find(p => p.id === fromId);
+          {chipAnimations.map(({fromId, toId, amount, timestamp, type}) => {
+            const sourcePlayer = type === 'bet' ? 
+              gameState.players.find(p => p.id === fromId) :
+              { id: 'pot' };
+            const targetPlayer = type === 'collect' ? 
+              gameState.players.find(p => p.id === toId) :
+              { id: 'pot' };
+            
             if (!sourcePlayer) return null;
 
-            const sourceIndex = gameState.players.indexOf(sourcePlayer);
-            const sourceAngle = (sourceIndex * (360 / 6) - 90) * (Math.PI / 180);
-            const sourceX = 50 + 42 * Math.cos(sourceAngle);
-            const sourceY = 50 + 42 * Math.sin(sourceAngle);
+            const sourceIndex = type === 'bet' ? 
+              gameState.players.indexOf(sourcePlayer as Player) : -1;
+            const targetIndex = type === 'collect' && targetPlayer ? 
+              gameState.players.indexOf(targetPlayer as Player) : -1;
+
+            const sourceAngle = type === 'bet' ? 
+              (sourceIndex * (360 / 6) - 90) * (Math.PI / 180) : 0;
+            const targetAngle = type === 'collect' ? 
+              (targetIndex * (360 / 6) - 90) * (Math.PI / 180) : 0;
+
+            const sourceX = type === 'bet' ? 
+              50 + 42 * Math.cos(sourceAngle) :
+              50;
+            const sourceY = type === 'bet' ? 
+              50 + 42 * Math.sin(sourceAngle) :
+              50;
+
+            const targetX = type === 'collect' ? 
+              50 + 42 * Math.cos(targetAngle) :
+              50;
+            const targetY = type === 'collect' ? 
+              50 + 42 * Math.sin(targetAngle) :
+              50;
 
             return (
               <div
@@ -478,14 +544,15 @@ const Index = () => {
                 style={{
                   '--start-x': `${sourceX}%`,
                   '--start-y': `${sourceY}%`,
-                  '--end-x': '50%',
-                  '--end-y': '50%',
+                  '--end-x': `${targetX}%`,
+                  '--end-y': `${targetY}%`,
                 } as React.CSSProperties}
               >
                 ${amount}
               </div>
             );
           })}
+
         </div>
       </main>
 
