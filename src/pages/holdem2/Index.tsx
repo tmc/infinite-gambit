@@ -23,6 +23,8 @@ type GameState = {
   currentPlayer: number;
   phase: string;
   lastAction?: string;
+  dealerPosition: number;
+  isDealing: boolean;
 };
 
 const INITIAL_GAME_STATE: GameState = {
@@ -110,7 +112,9 @@ const INITIAL_GAME_STATE: GameState = {
   communityCards: ['7♥', '2♣', '5♦'],
   currentBet: 0,
   currentPlayer: 0,
-  phase: 'flop'
+  phase: 'flop',
+  dealerPosition: 0,
+  isDealing: false
 };
 
 const Index = () => {
@@ -120,6 +124,22 @@ const Index = () => {
     return card.includes('♥') || card.includes('♦') ? 'red' : 'black';
   };
 
+  const startNewRound = () => {
+    setGameState(prev => ({
+      ...prev,
+      isDealing: true,
+      dealerPosition: (prev.dealerPosition + 1) % prev.players.length
+    }));
+
+    // Reset dealing animation after cards are dealt
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        isDealing: false
+      }));
+    }, 2000); // Adjust timing based on animation duration
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <header className="mb-8">
@@ -127,27 +147,36 @@ const Index = () => {
           <h1 className="text-3xl font-bold tracking-tight">
             <span className="text-primary">Poker</span> Tournament
           </h1>
-          <div className="chip-stack">
-            <span className="text-muted-foreground">Current Pot:</span>
-            <div className="chip bg-primary/20 border-primary text-primary">
-              ${gameState.pot}
+          <div className="flex gap-4 items-center">
+            <button 
+              onClick={startNewRound}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Deal New Hand
+            </button>
+            <div className="chip-stack">
+              <span className="text-muted-foreground">Current Pot:</span>
+              <div className="chip bg-primary/20 border-primary text-primary">
+                ${gameState.pot}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto relative">
-        {/* Poker Table */}
         <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
-          {/* Table felt */}
           <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
-            {/* Community Cards */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
               {gameState.communityCards.map((card, index) => (
                 <div
                   key={index}
-                  className={`poker-card ${getCardColor(card)} deal-animation`}
-                  style={{ animationDelay: `${index * 0.2}s` }}
+                  className={`poker-card ${getCardColor(card)} ${
+                    gameState.isDealing ? 'deal-animation' : ''
+                  }`}
+                  style={{ 
+                    animationDelay: gameState.isDealing ? `${(gameState.players.length * 2 + index) * 0.15}s` : '0s'
+                  }}
                 >
                   {card}
                 </div>
@@ -155,13 +184,17 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Players positioned in a circle */}
           {gameState.players.map((player, index) => {
-            // Calculate position around the circle
             const angle = (index * (360 / 6) - 90) * (Math.PI / 180);
-            const radius = 42; // Percentage from center
+            const radius = 42;
             const left = 50 + radius * Math.cos(angle);
             const top = 50 + radius * Math.sin(angle);
+
+            // Calculate dealer button position
+            const dealerButtonAngle = ((gameState.dealerPosition * (360 / 6)) - 90) * (Math.PI / 180);
+            const dealerButtonRadius = 38; // Slightly inside the player circle
+            const dealerButtonLeft = 50 + dealerButtonRadius * Math.cos(dealerButtonAngle);
+            const dealerButtonTop = 50 + dealerButtonRadius * Math.sin(dealerButtonAngle);
 
             return (
               <div
@@ -203,9 +236,11 @@ const Index = () => {
                         key={cardIndex}
                         className={`poker-card scale-75 ${getCardColor(card)} ${
                           player.folded ? 'opacity-50' : ''
-                        } deal-animation`}
+                        } ${gameState.isDealing ? 'deal-animation' : ''}`}
                         style={{
-                          animationDelay: `${index * 0.15 + cardIndex * 0.15}s`,
+                          animationDelay: gameState.isDealing 
+                            ? `${((index * 2) + cardIndex) * 0.15}s` 
+                            : '0s',
                           transformOrigin: 'center center',
                         }}
                       >
@@ -226,6 +261,17 @@ const Index = () => {
               </div>
             );
           })}
+
+          {/* Dealer Button */}
+          <div 
+            className="absolute w-8 h-8 bg-white rounded-full border-2 border-primary flex items-center justify-center text-sm font-bold text-primary transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-lg"
+            style={{
+              left: `${50 + 38 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+              top: `${50 + 38 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+            }}
+          >
+            D
+          </div>
         </div>
       </main>
 
