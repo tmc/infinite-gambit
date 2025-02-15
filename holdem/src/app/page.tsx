@@ -1,4 +1,6 @@
 import Image from "next/image";
+import Tournament from './components/Tournament';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -48,6 +50,13 @@ export default function Home() {
             Read our docs
           </a>
         </div>
+
+        <Link
+          href="/new-game"
+          className="inline-block bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Start New Tournament
+        </Link>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
         <a
