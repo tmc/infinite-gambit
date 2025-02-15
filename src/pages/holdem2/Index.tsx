@@ -226,6 +226,16 @@ const Index = () => {
       <main className="container mx-auto relative">
         <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
           <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
+            <div 
+              className="absolute w-12 h-12 bg-white rounded-full border-4 border-[#9b87f5] flex items-center justify-center text-xl font-bold text-[#9b87f5] transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_15px_rgba(155,135,245,0.3)] z-10"
+              style={{
+                left: `${50 + 30 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+                top: `${50 + 30 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+              }}
+            >
+              D
+            </div>
+
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
               <div className="flex gap-2 mb-8">
                 {gameState.communityCards.map((card, index) => (
@@ -252,30 +262,20 @@ const Index = () => {
                         key={i}
                         className="absolute w-16 h-16"
                         style={{
-                          transform: `translateY(${i * -2}px)`,
+                          transform: `translateY(${i * -2}px) translateZ(${i * 1}px)`,
                           zIndex: i
                         }}
                       >
-                        <div className="w-full h-full rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] transform-gpu transition-all duration-200" />
+                        <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
                       </div>
                     ))}
-                    <div className="relative w-16 h-16 rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] flex items-center justify-center text-sm font-bold text-white/90">
+                    <div className="relative w-16 h-16 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-sm font-bold text-white/90">
                       ${gameState.pot}
                     </div>
                   </div>
                 </div>
               )}
             </div>
-          </div>
-
-          <div 
-            className="absolute w-8 h-8 bg-white rounded-full border-2 border-primary flex items-center justify-center text-sm font-bold text-primary transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-lg z-10"
-            style={{
-              left: `${50 + 35 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
-              top: `${50 + 35 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
-            }}
-          >
-            D
           </div>
 
           {gameState.players.map((player, index) => {
@@ -319,14 +319,14 @@ const Index = () => {
                           key={i}
                           className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -2}px)`,
+                            transform: `translateY(${i * -2}px) translateZ(${i * 1}px) rotateX(55deg)`,
                             zIndex: i
                           }}
                         >
-                          <div className="w-full h-full rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] transform-gpu transition-all duration-200" />
+                          <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
                         </div>
                       ))}
-                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] flex items-center justify-center text-xs font-bold text-white/90">
+                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-xs font-bold text-white/90 transform-gpu rotateX(55deg)">
                         ${player.chips}
                       </div>
                     </div>
@@ -364,14 +364,14 @@ const Index = () => {
                           key={i}
                           className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -2}px)`,
+                            transform: `translateY(${i * -2}px) translateZ(${i * 1}px) rotateX(55deg)`,
                             zIndex: i
                           }}
                         >
-                          <div className="w-full h-full rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] transform-gpu transition-all duration-200" />
+                          <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
                         </div>
                       ))}
-                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#1a3f1a] bg-[#234E23] shadow-[0_0_10px_rgba(35,78,35,0.5)] flex items-center justify-center text-xs font-bold text-white/90">
+                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-xs font-bold text-white/90 transform-gpu rotateX(55deg)">
                         ${player.bet}
                       </div>
                     </div>
@@ -479,7 +479,7 @@ const Index = () => {
           }
 
           .chip-stack-3d:hover > * {
-            transform: translateY(0) !important;
+            transform: translateY(0) rotateX(0) !important;
           }
         `}
       </style>
