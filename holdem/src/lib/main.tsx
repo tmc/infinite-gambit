@@ -17,22 +17,12 @@ const payerIdMap = {
     "6": "pd-1efebfcc-648c-64de-ae47-87e95dee5b8e"
 };
 
-// This could be your external function that returns winner positions
 function getWinnerPositions() {
     // Replace this with your actual implementation
     return [4, 3, 6]; // Example return value: [first, second, third]
 }
 
 async function createPayment() {
-    // This code is for creating a payee and won't be used in PRD
-    // const agentPayee1 = await payman.payments.createPayee({
-    //     type: 'PAYMAN_AGENT',
-    //     paymanAgent: 'agt-1efebee6-af35-6f73-9c15-ed3e511002ed',  // Recipient agent's ID from dashboard
-    //     name: 'Agent 1',
-    // });
-
-    // console.log(agentPayee1);
-
     const winners = getWinnerPositions();
     
     const payment1 = await payman.payments.sendPayment({
