@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import EventStream from './EventStream';
+import Image from 'next/image';
+import { getAgentLogo, type AgentType } from '../lib/agents/Agent';
 
 type PlayerStyle = 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
 
@@ -9,6 +11,7 @@ type PlayerPersonality = {
   bluffFrequency: number;
   name: string;
   description: string;
+  agentType: AgentType;
 };
 
 type Player = {
@@ -268,11 +271,20 @@ export default function Tournament({ settings }: TournamentProps) {
                     }`}
                   >
                     <div className="flex justify-between items-start h-8">
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-cyan-300 truncate">{player.name}</h4>
-                        <span className={`text-xs truncate block ${getStyleColors(player.personality.style).text}`}>
-                          {player.personality.description}
-                        </span>
+                      <div className="min-w-0 flex items-center gap-2">
+                        <Image
+                          src={getAgentLogo(player.personality.agentType)}
+                          alt={`${player.personality.agentType} logo`}
+                          width={20}
+                          height={20}
+                          className="rounded-full"
+                        />
+                        <div>
+                          <h4 className="font-semibold text-cyan-300 truncate">{player.name}</h4>
+                          <span className={`text-xs truncate block ${getStyleColors(player.personality.style).text}`}>
+                            {player.personality.description}
+                          </span>
+                        </div>
                       </div>
                       {player.eliminated ? (
                         <span className="text-xs bg-red-900 text-red-300 border border-red-700 px-2 py-1 rounded flex-none">
