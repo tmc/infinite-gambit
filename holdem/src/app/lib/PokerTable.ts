@@ -28,6 +28,7 @@ export class PokerTable {
   handNumber: number = 0;
   smallBlind: number;
   bigBlind: number;
+  private deck: string[] = [];
 
   constructor(numPlayers: number, startingChips: number, smallBlind: number = 10, bigBlind: number = 20) {
     this.smallBlind = smallBlind;
@@ -55,6 +56,20 @@ export class PokerTable {
     }
   }
 
+  private initializeDeck(): string[] {
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+    const suits = ['♠', '♥', '♦', '♣'];
+    const deck = ranks.flatMap(r => suits.map(s => r + s));
+    
+    // Shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    
+    return deck;
+  }
+
   async simulatePlayerAction(player: PokerPlayer): Promise<{ action: string; amount?: number }> {
     const context = {
       hand: player.hand,
@@ -63,7 +78,7 @@ export class PokerTable {
       pot: this.pot,
       currentBet: this.currentBet,
       playerChips: player.chips,
-      position: this.players.indexOf(player) >= this.players.length - 2 ? 'late' : 'early',
+      position: this.players.indexOf(player) >= this.players.length - 2 ? 'late' as const : 'early' as const,
       numActivePlayers: this.players.filter(p => !p.folded && !p.eliminated).length,
       opponents: this.players
         .filter(p => p.id !== player.id)
@@ -180,21 +195,12 @@ export class PokerTable {
   }
 
   dealCards() {
-    // Simple deck of cards (just for simulation)
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
-    const suits = ['♠', '♥', '♦', '♣'];
-    const deck = ranks.flatMap(r => suits.map(s => r + s));
-    
-    // Shuffle
-    for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
+    this.deck = this.initializeDeck();
     
     // Deal hole cards only to non-eliminated players
     this.players.forEach(p => {
       if (!p.eliminated) {
-        p.hand = [deck.pop()!, deck.pop()!];
+        p.hand = [this.deck.pop()!, this.deck.pop()!];
         p.folded = false;
         p.bet = 0;
       } else {
@@ -216,15 +222,15 @@ export class PokerTable {
     switch (this.phase) {
       case 'preflop':
         this.phase = 'flop';
-        this.communityCards = this.communityCards.concat(Array(3).fill('X'));
+        this.communityCards = [this.deck.pop()!, this.deck.pop()!, this.deck.pop()!];
         break;
       case 'flop':
         this.phase = 'turn';
-        this.communityCards.push('X');
+        this.communityCards.push(this.deck.pop()!);
         break;
       case 'turn':
         this.phase = 'river';
-        this.communityCards.push('X');
+        this.communityCards.push(this.deck.pop()!);
         break;
       case 'river':
         this.phase = 'showdown';
