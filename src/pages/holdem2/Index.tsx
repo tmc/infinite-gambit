@@ -390,20 +390,63 @@ const Index: React.FC = () => {
         }));
         break;
 
-      case 15: // Deal river
+    case 15: // Deal river and show winner
+      const winningPlayerId = '2'; // For demo - you can implement real winner logic
+      setGameState(prev => ({
+        ...prev,
+        phase: 'river',
+        communityCards: [...prev.communityCards, shuffledDeck[14]],
+        lastAction: 'Dealing river',
+        stepIndex: 15,
+      }));
+      
+      // Add delay before showing winner
+      setTimeout(() => {
+        collectWinnings(winningPlayerId, gameState.pot);
         setGameState(prev => ({
           ...prev,
-          phase: 'river',
-          communityCards: [...prev.communityCards, shuffledDeck[14]],
-          lastAction: 'Dealing river',
-          stepIndex: 15,
-          isDealing: false
+          isDealing: false,
+          lastAction: `${gameState.players.find(p => p.id === winningPlayerId)?.name} wins pot of $${gameState.pot}`,
         }));
-        break;
+      }, 1000);
+      break;
 
       default:
         break;
     }
+  };
+
+  const collectWinnings = (winnerId: string, potAmount: number) => {
+    setChipAnimations(prev => [
+      ...prev,
+      {
+        fromId: 'pot',
+        toId: winnerId,
+        amount: potAmount,
+        timestamp: Date.now(),
+        type: 'collect'
+      }
+    ]);
+
+    setGameState(prev => {
+      const updatedPlayers = prev.players.map(player => {
+        if (player.id === winnerId) {
+          return {
+            ...player,
+            chips: player.chips + potAmount,
+            bet: 0
+          };
+        }
+        return player;
+      });
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        pot: 0,
+        currentBet: 0
+      };
+    });
   };
 
   const startNewRound = () => {
@@ -467,8 +510,8 @@ const Index: React.FC = () => {
       </header>
 
       <main className="container mx-auto relative">
-        <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
-          <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
+        <div className="aspect-square max-w-[800px] mx-auto relative mb-8">
+          <div className="absolute inset-[5%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
             <div 
               className="absolute w-12 h-12 bg-white rounded-full border-4 border-[#9b87f5] flex items-center justify-center text-xl font-bold text-[#9b87f5] transition-all duration-300 -translate-x-1/2 -translate-y-1/2"
               style={{

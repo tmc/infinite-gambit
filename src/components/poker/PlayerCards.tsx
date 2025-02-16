@@ -21,11 +21,11 @@ export const PlayerCards: React.FC<PlayerCardsProps> = ({
   };
 
   return (
-    <div className="flex gap-1 justify-center">
+    <div className="flex gap-2 justify-center">
       {hand.map((card, cardIndex) => (
         <div
           key={cardIndex}
-          className={`poker-card scale-75 ${getCardColor(card)} ${
+          className={`poker-card scale-90 ${getCardColor(card)} ${
             folded ? 'opacity-50' : ''
           } ${isDealing ? 'deal-animation' : ''}`}
           style={{

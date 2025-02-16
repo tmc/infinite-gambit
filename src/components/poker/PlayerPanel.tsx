@@ -3,6 +3,7 @@ import React from 'react';
 import { type Player } from '../../types/poker';
 import { ChipStack } from './ChipStack';
 import { PlayerCards } from './PlayerCards';
+import { ArrowRight } from 'lucide-react';
 
 interface PlayerPanelProps {
   player: Player;
@@ -20,20 +21,25 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
   isDealing
 }) => {
   const angle = (index * (360 / 6) - 90) * (Math.PI / 180);
-  const radius = 42;
+  const radius = 46; // Increased from 42 to spread players out more
   const left = 50 + radius * Math.cos(angle);
   const top = 50 + radius * Math.sin(angle);
 
   return (
     <div
-      className={`player-panel absolute w-[200px] min-h-[140px] -translate-x-1/2 -translate-y-1/2 ${
-        isCurrentPlayer ? 'active ring-2 ring-primary animate-pulse' : ''
+      className={`player-panel absolute w-[220px] min-h-[160px] -translate-x-1/2 -translate-y-1/2 ${
+        isCurrentPlayer ? 'ring-2 ring-primary' : ''
       } ${player.id === 'dealer' ? 'dealer-seat' : ''}`}
       style={{
         left: `${left}%`,
         top: `${top}%`,
       }}
     >
+      {isCurrentPlayer && (
+        <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-primary animate-pulse">
+          <ArrowRight size={24} />
+        </div>
+      )}
       <div className="flex justify-between items-start mb-2 min-h-[80px]">
         <div className="flex flex-col h-full">
           <h3 className="font-semibold text-lg mb-1">{player.name}</h3>
