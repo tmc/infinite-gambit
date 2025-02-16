@@ -35,7 +35,7 @@ export default function Game() {
     <div className="min-h-screen">
       <div className="h-16 bg-gray-100 dark:bg-gray-800">
         <div className="h-full flex justify-between items-center max-w-7xl mx-auto px-4">
-          <h1 className="text-xl font-bold">Poker Tournament</h1>
+          <h1 className="text-xl font-bold">Infinite Gambit</h1>
           <div className="text-sm">
             <span className="mr-4">Players: {settings.playerCount}</span>
             <span className="mr-4">Starting Chips: {settings.startingChips}</span>
