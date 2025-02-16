@@ -197,6 +197,10 @@ const Index = () => {
         const smallBlindIndex = getPlayerIndex(0);
         const bigBlindIndex = getPlayerIndex(1);
         
+        // Get player IDs before updating state
+        const smallBlindPlayerId = gameState.players[smallBlindIndex].id;
+        const bigBlindPlayerId = gameState.players[bigBlindIndex].id;
+        
         setGameState(prev => {
           const updatedPlayers = prev.players.map((player, index) => {
             if (index === smallBlindIndex) {
@@ -227,17 +231,17 @@ const Index = () => {
           };
         });
 
-        // Add chip animations for blinds
+        // Add chip animations using the player IDs we got earlier
         setChipAnimations(prev => [
           ...prev,
           { 
-            fromId: prev.players[smallBlindIndex].id, 
+            fromId: smallBlindPlayerId, 
             amount: SMALL_BLIND, 
             timestamp: Date.now(), 
             type: 'bet' 
           },
           { 
-            fromId: prev.players[bigBlindIndex].id, 
+            fromId: bigBlindPlayerId, 
             amount: BIG_BLIND, 
             timestamp: Date.now() + 100, 
             type: 'bet' 
