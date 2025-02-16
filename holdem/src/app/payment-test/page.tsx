@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function PaymentTestPage() {
-  const [positions, setPositions] = useState<[number, number, number]>([1, 2, 3]);
+  const [positions, setPositions] = useState<[number, number, number]>([1, 2, 5]);
   const [result, setResult] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
