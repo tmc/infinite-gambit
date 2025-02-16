@@ -47,6 +47,102 @@ type GameSettings = {
   };
 };
 
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+const VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // Adam, confident and engaging voice
+
+// Voice queue system
+class VoiceQueue {
+  private queue: Array<{
+    text: string;
+    style: 'excited' | 'neutral' | 'dramatic';
+  }> = [];
+  private isPlaying = false;
+
+  async add(text: string, style: 'excited' | 'neutral' | 'dramatic' = 'neutral') {
+    this.queue.push({ text, style });
+    if (!this.isPlaying) {
+      await this.processQueue();
+    }
+  }
+
+  private async processQueue() {
+    if (this.queue.length === 0) {
+      this.isPlaying = false;
+      return;
+    }
+
+    this.isPlaying = true;
+    const { text, style } = this.queue[0];
+
+    try {
+      await this.playAnnouncement(text, style);
+    } catch (error) {
+      console.error('Voice announcement failed:', error);
+    }
+
+    this.queue.shift();
+    await this.processQueue();
+  }
+
+  private async playAnnouncement(text: string, style: 'excited' | 'neutral' | 'dramatic') {
+    if (!ELEVENLABS_API_KEY) {
+      console.log('ElevenLabs API key not found, skipping voice announcement:', text);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`,
+        {
+          method: 'POST',
+          headers: {
+            'Accept': 'audio/mpeg',
+            'Content-Type': 'application/json',
+            'xi-api-key': ELEVENLABS_API_KEY
+          },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_monolingual_v1',
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.75,
+              style: style === 'excited' ? 0.8 : style === 'dramatic' ? 0.6 : 0.3,
+              use_speaker_boost: true
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.statusText}`);
+      }
+
+      const audioBuffer = await response.arrayBuffer();
+      const tempFile = `/tmp/poker_announcement_${Date.now()}.mp3`;
+      const fs = require('fs');
+      fs.writeFileSync(tempFile, Buffer.from(audioBuffer));
+      
+      // Play and wait for completion
+      await new Promise((resolve, reject) => {
+        const process = require('child_process');
+        process.exec(`mplayer ${tempFile}`, (error: Error | null) => {
+          fs.unlinkSync(tempFile); // Clean up temp file
+          if (error) reject(error);
+          else resolve(null);
+        });
+      });
+    } catch (error) {
+      console.error('Voice announcement failed:', error);
+    }
+  }
+}
+
+const voiceQueue = new VoiceQueue();
+
+async function announceWithVoice(text: string, style: 'excited' | 'neutral' | 'dramatic' = 'neutral') {
+  await voiceQueue.add(text, style);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const settings: GameSettings = await req.json();
@@ -61,8 +157,10 @@ export async function POST(req: NextRequest) {
     });
 
     // Announce tournament start
-    const startAnnouncement = `Starting poker tournament with ${settings.playerCount} players`;
-    await runTerminalCmd('say -v Daniel "' + startAnnouncement + '"');
+    await announceWithVoice(
+      `Welcome to the poker tournament! ${settings.playerCount} players are taking their seats, each starting with ${settings.startingChips} chips. The blinds are ${settings.blinds.small} and ${settings.blinds.big}. Let's begin!`,
+      'excited'
+    );
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -90,8 +188,9 @@ export async function POST(req: NextRequest) {
             // Periodic tournament status update
             const now = Date.now();
             if (now - lastCommentaryTime > COMMENTARY_INTERVAL) {
-              const commentary = `Hand ${handCount}. ${activePlayers} players remain. Current chip leader is ${getChipLeader(table.players)}`;
-              await runTerminalCmd('say -v Daniel "' + commentary + '"');
+              const chipLeader = getChipLeader(table.players);
+              const commentary = `Hand number ${handCount}. ${activePlayers} players remain in the tournament. ${chipLeader} leads the pack with the biggest stack.`;
+              await announceWithVoice(commentary, 'neutral');
               lastCommentaryTime = now;
             }
 
@@ -222,9 +321,8 @@ export async function POST(req: NextRequest) {
             console.log('\n=== Hand complete ===');
             const winner = table.players.find(p => !p.folded && !p.eliminated);
             if (winner && table.pot > table.bigBlind * 10) {
-              // Announce significant pots
-              const potAnnouncement = `${winner.name} wins a big pot of ${table.pot} chips!`;
-              await runTerminalCmd('say -v Daniel "' + potAnnouncement + '"');
+              const potAnnouncement = `What a hand! ${winner.name} rakes in a massive pot of ${table.pot} chips!`;
+              await announceWithVoice(potAnnouncement, 'excited');
 
               // Track significant hands in git
               const handStats = {
@@ -239,8 +337,8 @@ export async function POST(req: NextRequest) {
             // Announce eliminations
             const eliminated = table.players.find(p => p.chips <= 0 && !p.eliminated);
             if (eliminated) {
-              const eliminationAnnouncement = `${eliminated.name} has been eliminated in position ${eliminated.rank}`;
-              await runTerminalCmd('say -v Daniel "' + eliminationAnnouncement + '"');
+              const eliminationAnnouncement = `${eliminated.name} has been eliminated in position ${eliminated.rank}. A tough end to their tournament run.`;
+              await announceWithVoice(eliminationAnnouncement, 'dramatic');
 
               // Track eliminations in git
               const eliminationStats = {
@@ -264,8 +362,8 @@ export async function POST(req: NextRequest) {
           // Announce tournament winner
           const winner = table.players.find(p => !p.eliminated);
           if (winner) {
-            const winnerAnnouncement = `Tournament complete! ${winner.name} is the champion with ${winner.chips} chips!`;
-            await runTerminalCmd('say -v Daniel "' + winnerAnnouncement + '"');
+            const winnerAnnouncement = `Ladies and gentlemen, we have our champion! ${winner.name} has won the tournament with ${winner.chips} chips. An incredible performance!`;
+            await announceWithVoice(winnerAnnouncement, 'excited');
 
             // Final tournament results to git
             const finalStats = {
