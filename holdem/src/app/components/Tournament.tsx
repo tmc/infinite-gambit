@@ -1,5 +1,20 @@
 import { useEffect, useState } from 'react';
 import EventStream from './EventStream';
+import Image from 'next/image';
+import { getAgentLogo, type AgentType } from '../lib/agents/Agent';
+
+
+
+type PlayerStyle = 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
+
+type PlayerPersonality = {
+  style: PlayerStyle;
+  riskTolerance: number;
+  bluffFrequency: number;
+  name: string;
+  description: string;
+  agentType: AgentType;
+};
 
 type Player = {
   id: string;
@@ -14,13 +29,7 @@ type Player = {
   biggestPot: number;
   eliminated: boolean;
   rank?: number;
-  personality: {
-    style: 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
-    riskTolerance: number;
-    bluffFrequency: number;
-    name: string;
-    description: string;
-  };
+  personality: PlayerPersonality;
 };
 
 type GameState = {
@@ -220,27 +229,36 @@ export default function Tournament({ settings }: TournamentProps) {
                     }`}
                   >
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold text-cyan-300">{player.name}</h4>
-                        <span className={`text-xs ${
-                          player.personality.style === 'aggressive' ? 'text-red-400' :
-                          player.personality.style === 'conservative' ? 'text-blue-400' :
-                          player.personality.style === 'balanced' ? 'text-green-400' :
-                          'text-purple-400'
-                        }`}>
-                          {player.personality.description}
-                        </span>
+                      <div className="min-w-0 flex items-center gap-2">
+                        <Image
+                          src={getAgentLogo(player.personality.agentType)}
+                          alt={`${player.personality.agentType} logo`}
+                          width={20}
+                          height={20}
+                          className="rounded-full"
+                        />
+                        <div>
+                          <h4 className="font-semibold text-cyan-300">{player.name}</h4>
+                          <span className={`text-xs ${
+                            player.personality.style === 'aggressive' ? 'text-red-400' :
+                            player.personality.style === 'conservative' ? 'text-blue-400' :
+                            player.personality.style === 'balanced' ? 'text-green-400' :
+                            'text-purple-400'
+                          }`}>
+                            {player.personality.description}
+                          </span>
+                        </div>
                       </div>
-                      {player.eliminated ? (
-                        <span className="text-xs bg-red-900 text-red-300 border border-red-700 px-2 py-1 rounded">
-                          #{player.rank}
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-cyan-900 text-cyan-300 border border-cyan-700 px-2 py-1 rounded">
-                          Active
-                        </span>
-                      )}
                     </div>
+                    {player.eliminated ? (
+                      <span className="text-xs bg-red-900 text-red-300 border border-red-700 px-2 py-1 rounded">
+                        #{player.rank}
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-cyan-900 text-cyan-300 border border-cyan-700 px-2 py-1 rounded">
+                        Active
+                      </span>
+                    )}
                     <div className="grid grid-cols-2 gap-x-4 text-sm mt-2">
                       <p className="text-green-400">Chips: ${player.chips}</p>
                       <p className="text-purple-400">Hands Won: {player.handsWon}</p>

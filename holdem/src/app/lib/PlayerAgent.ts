@@ -1,3 +1,9 @@
+import { Agent, AgentType, getAgentLogo } from './agents/Agent';
+import { OpenAIAgent } from './agents/OpenAIAgent';
+import { AnthropicAgent } from './agents/AnthropicAgent';
+import { DeepseekAgent } from './agents/DeepseekAgent';
+import { LocalAgent } from './agents/LocalAgent';
+
 export type PlayerStyle = 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
 
 export type PlayerPersonality = {
@@ -6,6 +12,7 @@ export type PlayerPersonality = {
   bluffFrequency: number; // 0-1
   name: string;
   description: string;
+  agentType: AgentType;
 };
 
 const PERSONALITIES: PlayerPersonality[] = [
@@ -14,28 +21,32 @@ const PERSONALITIES: PlayerPersonality[] = [
     riskTolerance: 0.8,
     bluffFrequency: 0.4,
     name: 'The Shark',
-    description: 'Aggressive player who loves to raise and put pressure on opponents'
+    description: 'Aggressive player who loves to raise and put pressure on opponents',
+    agentType: 'openai'
   },
   {
     style: 'conservative',
     riskTolerance: 0.2,
     bluffFrequency: 0.1,
     name: 'The Rock',
-    description: 'Tight player who only plays premium hands'
+    description: 'Tight player who only plays premium hands',
+    agentType: 'anthropic'
   },
   {
     style: 'balanced',
     riskTolerance: 0.5,
     bluffFrequency: 0.25,
     name: 'The Pro',
-    description: 'Well-rounded player who adapts to the situation'
+    description: 'Well-rounded player who adapts to the situation',
+    agentType: 'deepseek'
   },
   {
     style: 'unpredictable',
     riskTolerance: 0.6,
     bluffFrequency: 0.6,
     name: 'The Wild Card',
-    description: 'Unpredictable player who keeps opponents guessing'
+    description: 'Unpredictable player who keeps opponents guessing',
+    agentType: 'local'
   }
 ];
 
@@ -74,9 +85,24 @@ export class PlayerAgent {
   personality: PlayerPersonality;
   private lastDecisionContext?: string;
   private lastHandAnalysis?: HandAnalysis;
+  private agent: Agent;
 
   constructor(personality: PlayerPersonality) {
     this.personality = personality;
+    this.agent = this.createAgent(personality.agentType);
+  }
+
+  private createAgent(type: AgentType): Agent {
+    switch (type) {
+      case 'openai':
+        return new OpenAIAgent();
+      case 'anthropic':
+        return new AnthropicAgent();
+      case 'deepseek':
+        return new DeepseekAgent();
+      default:
+        return new LocalAgent();
+    }
   }
 
   private analyzeHand(hand: string[], communityCards: string[]): HandAnalysis {
@@ -208,33 +234,23 @@ Then provide a brief explanation of your decision in character.`;
     }
 
     try {
-      // Make LLM call
-      const response = await fetch('/api/llm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt,
-          temperature: this.personality.style === 'unpredictable' ? 0.8 : 0.2,
-          maxTokens: 100
-        })
-      });
-
-      if (!response.ok) throw new Error('LLM call failed');
-      
-      const result = await response.json();
-      const text = result.text.toLowerCase();
+      const text = await this.agent.generateResponse(
+        prompt,
+        this.personality.style === 'unpredictable' ? 0.8 : 0.2
+      );
 
       // Parse decision
-      if (text.includes('fold')) {
-        return { action: 'fold', explanation: result.text };
-      } else if (text.includes('raise')) {
-        const amount = parseInt(text.match(/raise (\d+)/)?.[1] || '0');
-        return { action: 'raise', amount, explanation: result.text };
+      const lowerText = text.toLowerCase();
+      if (lowerText.includes('fold')) {
+        return { action: 'fold', explanation: text };
+      } else if (lowerText.includes('raise')) {
+        const amount = parseInt(lowerText.match(/raise (\d+)/)?.[1] || '0');
+        return { action: 'raise', amount, explanation: text };
       } else {
-        return { action: 'call', explanation: result.text };
+        return { action: 'call', explanation: text };
       }
     } catch (error) {
-      console.error('LLM call failed, using fallback logic:', error);
+      console.error('AI agent failed, using fallback logic:', error);
       return this.getFallbackDecision(context);
     }
   }
@@ -282,11 +298,11 @@ Then provide a brief explanation of your decision in character.`;
   async getCommentary(decision: { action: string; amount?: number }): Promise<string> {
     // In test environment, always use default commentary
     if (process.env.NODE_ENV === 'test') {
-      return this.getDefaultCommentary(decision);
+        return this.getDefaultCommentary(decision);
     }
 
     try {
-      const prompt = `You are ${this.personality.name}, a poker player with the following personality: ${this.personality.description}
+        const prompt = `You are ${this.personality.name}, a poker player with the following personality: ${this.personality.description}
 
 You just decided to ${decision.action}${decision.amount ? ` with amount ${decision.amount}` : ''}.
 
@@ -295,23 +311,10 @@ ${this.lastDecisionContext || 'No context available'}
 
 Provide a brief, in-character explanation of your decision.`;
 
-      const response = await fetch('/api/llm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          temperature: 0.7,
-          maxTokens: 50
-        })
-      });
-
-      if (!response.ok) throw new Error('LLM call failed');
-      
-      const result = await response.json();
-      return result.text;
+        return await this.agent.generateResponse(prompt, 0.7);
     } catch (error) {
-      console.error('LLM commentary failed, using fallback:', error);
-      return this.getDefaultCommentary(decision);
+        console.error('AI commentary failed, using fallback:', error);
+        return this.getDefaultCommentary(decision);
     }
   }
 

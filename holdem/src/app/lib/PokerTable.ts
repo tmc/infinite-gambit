@@ -32,6 +32,7 @@ export class PokerTable {
   initialBigBlind: number;
   handsPerLevel: number;
   currentLevel: number = 1;
+  private deck: string[] = [];
 
   constructor(
     numPlayers: number, 
@@ -76,6 +77,20 @@ export class PokerTable {
       this.bigBlind = this.initialBigBlind * Math.pow(2, newLevel - 1);
       this.lastAction = `Blinds increased to ${this.smallBlind}/${this.bigBlind}`;
     }
+  }
+
+  private initializeDeck(): string[] {
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+    const suits = ['♠', '♥', '♦', '♣'];
+    const deck = ranks.flatMap(r => suits.map(s => r + s));
+    
+    // Shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    
+    return deck;
   }
 
   async simulatePlayerAction(player: PokerPlayer): Promise<{ action: string; amount?: number }> {
@@ -233,32 +248,26 @@ export class PokerTable {
     
     // Reset player states before dealing
     this.players.forEach(p => {
-        if (!p.eliminated) {
-            p.folded = false;
-            p.bet = 0;
-            p.hand = [];
-        }
+      if (!p.eliminated) {
+        p.folded = false;
+        p.bet = 0;
+        p.hand = [];
+      }
     });
     
     // Check blind levels before dealing
     this.checkBlindLevel();
 
-    // Simple deck of cards (just for simulation)
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
-    const suits = ['♠', '♥', '♦', '♣'];
-    const deck = ranks.flatMap(r => suits.map(s => r + s));
-    
-    // Shuffle
-    for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
+    // Initialize and shuffle deck
+    this.deck = this.initializeDeck();
     
     // Deal hole cards
     this.players.forEach(p => {
-        if (!p.eliminated) {
-            p.hand = [deck.pop()!, deck.pop()!];
-        }
+      if (!p.eliminated) {
+        p.hand = [this.deck.pop()!, this.deck.pop()!];
+        p.folded = false;
+        p.bet = 0;
+      }
     });
 
     // Post blinds
@@ -347,15 +356,15 @@ export class PokerTable {
     switch (this.phase) {
       case 'preflop':
         this.phase = 'flop';
-        this.communityCards = ['X', 'X', 'X'];
+        this.communityCards = [this.deck.pop()!, this.deck.pop()!, this.deck.pop()!];
         break;
       case 'flop':
         this.phase = 'turn';
-        this.communityCards.push('X');
+        this.communityCards.push(this.deck.pop()!);
         break;
       case 'turn':
         this.phase = 'river';
-        this.communityCards.push('X');
+        this.communityCards.push(this.deck.pop()!);
         break;
       case 'river':
         this.phase = 'showdown';
