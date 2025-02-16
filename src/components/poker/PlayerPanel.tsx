@@ -20,8 +20,9 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
   dealerPos,
   isDealing
 }) => {
-  const angle = (index * (360 / 6) - 90) * (Math.PI / 180);
-  const radius = 46; // Increased from 42 to spread players out more
+  // Adjust angle calculation to better distribute players
+  const angle = ((index + (index >= 3 ? 1 : 0)) * (360 / 7) - 90) * (Math.PI / 180);
+  const radius = 44; // Slightly adjusted radius
   const left = 50 + radius * Math.cos(angle);
   const top = 50 + radius * Math.sin(angle);
 

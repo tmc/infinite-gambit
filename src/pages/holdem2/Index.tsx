@@ -140,10 +140,10 @@ const Index: React.FC = () => {
   };
 
   const getPlayerIndex = (offset: number) => {
-    let pos = (gameState.dealerPosition + 1 + offset) % gameState.players.length;
+    let pos = (gameState.dealerPosition + 1 + offset) % 6;
     if (pos >= 3) pos += 1;
-    if (pos >= gameState.players.length) {
-      pos = pos % gameState.players.length;
+    if (pos >= 6) {
+      pos = pos % 6;
     }
     return pos;
   };
@@ -458,7 +458,7 @@ const Index: React.FC = () => {
     // Reset to initial state but only move the dealer button
     setGameState(prev => ({
       ...INITIAL_GAME_STATE,
-      dealerPosition: (prev.dealerPosition + 1) % prev.players.length,
+      dealerPosition: (prev.dealerPosition + 1) % 6,
       isDealing: true,
       phase: 'preflop',
       lastAction: 'Dealer button moved',
@@ -510,8 +510,8 @@ const Index: React.FC = () => {
       </header>
 
       <main className="container mx-auto relative">
-        <div className="aspect-square max-w-[800px] mx-auto relative mb-8">
-          <div className="absolute inset-[5%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
+        <div className="aspect-square max-w-[900px] mx-auto relative mb-8">
+          <div className="absolute inset-[8%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
             <div 
               className="absolute w-12 h-12 bg-white rounded-full border-4 border-[#9b87f5] flex items-center justify-center text-xl font-bold text-[#9b87f5] transition-all duration-300 -translate-x-1/2 -translate-y-1/2"
               style={{
