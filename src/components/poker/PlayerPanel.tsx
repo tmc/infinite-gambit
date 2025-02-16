@@ -20,14 +20,14 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
   dealerPos,
   isDealing
 }) => {
-  // Adjusted angles for oval table layout with proper clockwise positioning
+  // Positions going clockwise from dealer (bottom center)
   const positions = [
-    { angle: 150, radius: { x: 42, y: 35 } },  // Player 1 (bottom left)
-    { angle: 90, radius: { x: 42, y: 35 } },   // Player 2 (top left)
-    { angle: 30, radius: { x: 42, y: 35 } },   // Player 3 (top right)
-    { angle: 180, radius: { x: 0, y: 0 } },    // Dealer (bottom center)
-    { angle: -30, radius: { x: 42, y: 35 } },  // Player 5 (bottom right)
-    { angle: -90, radius: { x: 42, y: 35 } },  // Player 6 (center right)
+    { angle: 165, radius: { x: 42, y: 35 } },  // Player 1 (bottom left)
+    { angle: 120, radius: { x: 42, y: 35 } },  // Player 2 (mid-left)
+    { angle: 60, radius: { x: 42, y: 35 } },   // Player 3 (top left)
+    { angle: 270, radius: { x: 0, y: 42 } },   // Dealer (bottom center)
+    { angle: -60, radius: { x: 42, y: 35 } },  // Player 5 (top right)
+    { angle: -120, radius: { x: 42, y: 35 } }, // Player 6 (mid-right)
   ];
 
   const pos = positions[index];
