@@ -17,26 +17,24 @@ const payerIdMap = {
     "6": "pd-1efebfcc-648c-64de-ae47-87e95dee5b8e"
 };
 
-function getWinnerPositions() {
-    // Replace this with your actual implementation
-    return [4, 3, 6]; // Example return value: [first, second, third]
-}
+// function getWinnerPositions() {
+//     // Replace this with your actual implementation
+//     return [4, 3, 6]; // Example return value: [first, second, third]
+// }
 
-async function createPayment() {
-    const winners = getWinnerPositions();
-    
+async function createPayment(winnerPositions: number[]) {
     const payment1 = await payman.payments.sendPayment({
-        paymentDestinationId: payerIdMap[winners[0].toString()],
+        paymentDestinationId: payerIdMap[winnerPositions[0].toString()],
         amountDecimal: 40.00,
     });
 
     const payment2 = await payman.payments.sendPayment({
-        paymentDestinationId: payerIdMap[winners[1].toString()],
+        paymentDestinationId: payerIdMap[winnerPositions[1].toString()],
         amountDecimal: 24.00,
     });
 
     const payment3 = await payman.payments.sendPayment({
-        paymentDestinationId: payerIdMap[winners[2].toString()],
+        paymentDestinationId: payerIdMap[winnerPositions[2].toString()],
         amountDecimal: 16.00,
     });
     
@@ -44,5 +42,5 @@ async function createPayment() {
     return [payment1, payment2, payment3];
 }
 
-// Call the function
-createPayment();
+// Example usage
+createPayment([4, 3, 6]);
