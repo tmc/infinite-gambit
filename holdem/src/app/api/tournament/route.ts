@@ -222,6 +222,10 @@ export async function POST(req: NextRequest) {
             console.log('\n=== Hand complete ===');
             const winner = table.players.find(p => !p.folded && !p.eliminated);
             if (winner && table.pot > table.bigBlind * 10) {
+              // Announce significant pots
+              const potAnnouncement = `${winner.name} wins a big pot of ${table.pot} chips!`;
+              await runTerminalCmd('say -v Daniel "' + potAnnouncement + '"');
+
               // Track significant hands in git
               const handStats = {
                 handNumber: handCount,
@@ -235,6 +239,9 @@ export async function POST(req: NextRequest) {
             // Announce eliminations
             const eliminated = table.players.find(p => p.chips <= 0 && !p.eliminated);
             if (eliminated) {
+              const eliminationAnnouncement = `${eliminated.name} has been eliminated in position ${eliminated.rank}`;
+              await runTerminalCmd('say -v Daniel "' + eliminationAnnouncement + '"');
+
               // Track eliminations in git
               const eliminationStats = {
                 player: eliminated.name,
@@ -257,6 +264,9 @@ export async function POST(req: NextRequest) {
           // Announce tournament winner
           const winner = table.players.find(p => !p.eliminated);
           if (winner) {
+            const winnerAnnouncement = `Tournament complete! ${winner.name} is the champion with ${winner.chips} chips!`;
+            await runTerminalCmd('say -v Daniel "' + winnerAnnouncement + '"');
+
             // Final tournament results to git
             const finalStats = {
               winner: winner.name,
