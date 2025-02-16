@@ -290,7 +290,7 @@ ${this.lastDecisionContext}
 
 Provide a brief, colorful commentary about your action in character (1-2 sentences).`;
 
-      const response = await fetch('/api/llm', {
+      const response = await fetch('http://localhost:3000/api/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, temperature: 0.7, maxTokens: 50 })
