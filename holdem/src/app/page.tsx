@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
-  const [playerCount, setPlayerCount] = useState(6);
+  const [playerCount, setPlayerCount] = useState(4);
   const [startingChips, setStartingChips] = useState(1000);
   const [blinds, setBlinds] = useState({ small: 10, big: 20 });
   const [handsPerLevel, setHandsPerLevel] = useState(10);

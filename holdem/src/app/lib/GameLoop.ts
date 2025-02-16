@@ -35,7 +35,7 @@ export async function runTournament(
   while (table.players.some(p => !p.eliminated) && handCount < MAX_HANDS) {
     // Start new hand
     table.dealCards();
-    table.handNumber++; // Increment hand number at start of each hand
+    // Note: handNumber is incremented in PokerTable.isHandComplete() after the hand is actually complete
     handCount++;
 
     // In test mode, only emit state at start of hand

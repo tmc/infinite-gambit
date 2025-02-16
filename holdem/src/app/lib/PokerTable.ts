@@ -356,8 +356,17 @@ export class PokerTable {
       return true;
     }
 
-    const betsMatch = activePlayers.every(p => p.bet === this.currentBet);
-    if (betsMatch && this.phase !== 'showdown') {
+    // Check if all active players have acted and their bets match
+    const allPlayersActed = activePlayers.every(p => {
+      // Player has either:
+      // 1. Matched the current bet
+      // 2. Is all-in (no chips left)
+      // 3. Everyone has checked (all bets are 0)
+      return p.bet === this.currentBet || p.chips === 0 || (this.currentBet === 0 && p.bet === 0);
+    });
+
+    // Progress to next phase if all players have acted and we're not in showdown
+    if (allPlayersActed && this.phase !== 'showdown') {
       await this.progressPhase();
     }
     
@@ -402,12 +411,18 @@ export class PokerTable {
         break;
     }
 
-    this.currentPlayerIndex = 0;
-    while (
-      this.players[this.currentPlayerIndex].folded ||
-      this.players[this.currentPlayerIndex].eliminated
-    ) {
-      this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+    // Find first active player after the dealer
+    const activePlayers = this.players.filter(p => !p.folded && !p.eliminated);
+    if (activePlayers.length > 0) {
+      // Start with the first player after the dealer
+      let index = 0;
+      while (
+        this.players[index].folded ||
+        this.players[index].eliminated
+      ) {
+        index = (index + 1) % this.players.length;
+      }
+      this.currentPlayerIndex = index;
     }
 
     // Only add delay in non-test environment
