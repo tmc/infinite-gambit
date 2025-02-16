@@ -510,13 +510,13 @@ const Index: React.FC = () => {
       </header>
 
       <main className="container mx-auto relative">
-        <div className="aspect-square max-w-[900px] mx-auto relative mb-8">
-          <div className="absolute inset-[8%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
+        <div className="aspect-[16/10] max-w-[1200px] mx-auto relative mb-8">
+          <div className="absolute inset-[8%] rounded-[45%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
             <div 
               className="absolute w-12 h-12 bg-white rounded-full border-4 border-[#9b87f5] flex items-center justify-center text-xl font-bold text-[#9b87f5] transition-all duration-300 -translate-x-1/2 -translate-y-1/2"
               style={{
-                left: `${50 + 30 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
-                top: `${50 + 30 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+                left: '50%',
+                top: '85%', // Position dealer at bottom center
               }}
             >
               D
@@ -542,7 +542,7 @@ const Index: React.FC = () => {
                 player={player}
                 index={index}
                 isCurrentPlayer={index === gameState.currentPlayer}
-                dealerPos={dealerPos}
+                dealerPos={{ x: 50, y: 85 }}
                 isDealing={gameState.isDealing}
               />
             ))}
