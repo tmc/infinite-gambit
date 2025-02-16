@@ -14,6 +14,7 @@
   "dependencies": {
     "@shadcn/ui": "^0.0.4",
     "ai": "^4.1.41",
+    "dotenv": "^16.4.5",
     "next": "15.1.7",
     "paymanai": "^2.5.0",
     "react": "^19.0.0",
