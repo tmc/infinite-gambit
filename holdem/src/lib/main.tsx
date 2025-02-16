@@ -37,17 +37,17 @@ async function createPayment() {
     
     const payment1 = await payman.payments.sendPayment({
         paymentDestinationId: payerIdMap[winners[0].toString()],
-        amountDecimal: 400.00,
+        amountDecimal: 40.00,
     });
 
     const payment2 = await payman.payments.sendPayment({
         paymentDestinationId: payerIdMap[winners[1].toString()],
-        amountDecimal: 240.00,
+        amountDecimal: 24.00,
     });
 
     const payment3 = await payman.payments.sendPayment({
         paymentDestinationId: payerIdMap[winners[2].toString()],
-        amountDecimal: 160.00,
+        amountDecimal: 16.00,
     });
     
     console.log(payment1, payment2, payment3);
