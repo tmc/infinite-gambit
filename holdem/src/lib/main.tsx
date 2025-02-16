@@ -43,4 +43,4 @@ async function createPayment(winnerPositions: number[]) {
 }
 
 // Example usage
-createPayment([4, 3, 6]);
+// createPayment([4, 3, 6]);
