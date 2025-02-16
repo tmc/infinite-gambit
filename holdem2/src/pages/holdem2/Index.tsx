@@ -32,7 +32,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '1',
       name: 'Player 1',
       chips: 1000,
-      hand: ['A♠', 'K♠'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -45,7 +45,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '2',
       name: 'Player 2',
       chips: 1200,
-      hand: ['Q♥', 'J♥'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -58,7 +58,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '3',
       name: 'Player 3',
       chips: 800,
-      hand: ['8♣', '8♦'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -84,7 +84,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '5',
       name: 'Player 5',
       chips: 950,
-      hand: ['T♠', 'T♣'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -97,7 +97,7 @@ const INITIAL_GAME_STATE: GameState = {
       id: '6',
       name: 'Player 6',
       chips: 1100,
-      hand: ['J♠', 'Q♠'],
+      hand: [],
       bet: 0,
       folded: false,
       eliminated: false,
@@ -108,11 +108,11 @@ const INITIAL_GAME_STATE: GameState = {
     }
   ],
   pot: 0,
-  communityCards: ['7♥', '2♣', '5♦'],
+  communityCards: [],
   currentBet: 0,
   currentPlayer: 0,
-  phase: 'flop',
-  dealerPosition: 3, // Fixed dealer position
+  phase: 'preflop',
+  dealerPosition: 3,
   isDealing: false
 };
 
@@ -137,18 +137,49 @@ const Index = () => {
   };
 
   const startNewRound = () => {
-    setGameState(prev => ({
-      ...prev,
-      isDealing: true,
-      dealerPosition: (prev.dealerPosition + 1) % prev.players.length
-    }));
+    setGameState({
+      ...INITIAL_GAME_STATE,
+      dealerPosition: (gameState.dealerPosition + 1) % gameState.players.length,
+      isDealing: true
+    });
 
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
+        players: prev.players.map((player, index) => ({
+          ...player,
+          hand: index === 0 ? ['A♠'] :
+                index === 1 ? ['Q♥'] :
+                index === 2 ? ['8♣'] :
+                index === 4 ? ['T♠'] :
+                index === 5 ? ['J♠'] :
+                []
+        }))
+      }));
+    }, 500);
+
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        players: prev.players.map((player, index) => ({
+          ...player,
+          hand: index === 0 ? ['A♠', 'K♠'] :
+                index === 1 ? ['Q♥', 'J♥'] :
+                index === 2 ? ['8♣', '8♦'] :
+                index === 4 ? ['T♠', 'T♣'] :
+                index === 5 ? ['J♠', 'Q♠'] :
+                player.hand
+        }))
+      }));
+    }, 1500);
+
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        communityCards: ['7♥', '2♣', '5♦'],
         isDealing: false
       }));
-    }, 2000);
+    }, 2500);
   };
 
   const dealerPos = getDealerPosition();
@@ -226,6 +257,16 @@ const Index = () => {
       <main className="container mx-auto relative">
         <div className="aspect-[16/9] max-w-[1200px] mx-auto relative mb-8">
           <div className="absolute inset-[10%] rounded-[100%] bg-[#234E23] border-8 border-[#403E43] shadow-2xl">
+            <div 
+              className="absolute w-12 h-12 bg-white rounded-full border-4 border-[#9b87f5] flex items-center justify-center text-xl font-bold text-[#9b87f5] transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_15px_rgba(155,135,245,0.3)] z-10"
+              style={{
+                left: `${50 + 30 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+                top: `${50 + 30 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
+              }}
+            >
+              D
+            </div>
+
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
               <div className="flex gap-2 mb-8">
                 {gameState.communityCards.map((card, index) => (
@@ -252,30 +293,20 @@ const Index = () => {
                         key={i}
                         className="absolute w-16 h-16"
                         style={{
-                          transform: `translateY(${i * -4}px) translateZ(${i * 2}px)`,
+                          transform: `translateY(${i * -2}px) translateZ(${i * 1}px)`,
                           zIndex: i
                         }}
                       >
-                        <div className="w-full h-full rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                        <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
                       </div>
                     ))}
-                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg flex items-center justify-center text-sm font-bold text-primary">
+                    <div className="relative w-16 h-16 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-sm font-bold text-white/90">
                       ${gameState.pot}
                     </div>
                   </div>
                 </div>
               )}
             </div>
-          </div>
-
-          <div 
-            className="absolute w-8 h-8 bg-white rounded-full border-2 border-primary flex items-center justify-center text-sm font-bold text-primary transition-all duration-300 -translate-x-1/2 -translate-y-1/2 shadow-lg z-10"
-            style={{
-              left: `${50 + 35 * Math.cos((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
-              top: `${50 + 35 * Math.sin((gameState.dealerPosition * (360 / 6) - 90) * (Math.PI / 180))}%`,
-            }}
-          >
-            D
           </div>
 
           {gameState.players.map((player, index) => {
@@ -311,6 +342,11 @@ const Index = () => {
                     >
                       {player.personality.description}
                     </span>
+                    {player.id !== 'dealer' && (
+                      <div className="mt-1 text-lg font-bold text-primary bg-primary/10 px-2 py-1 rounded-md inline-block">
+                        ${player.chips}
+                      </div>
+                    )}
                   </div>
                   {player.id !== 'dealer' && (
                     <div className="chip-stack-3d relative">
@@ -319,14 +355,14 @@ const Index = () => {
                           key={i}
                           className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -3}px) translateZ(${i * 2}px)`,
+                            transform: `translateY(${i * -2}px) translateZ(${i * 1}px) rotateX(55deg)`,
                             zIndex: i
                           }}
                         >
-                          <div className="w-full h-full rounded-full bg-gradient-to-b from-secondary/80 to-secondary/60 border-2 border-primary/50 shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                          <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
                         </div>
                       ))}
-                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-b from-secondary/80 to-secondary/60 border-2 border-primary/50 shadow-lg flex items-center justify-center text-xs font-bold text-primary">
+                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-xs font-bold text-white/90 transform-gpu rotateX(55deg)">
                         ${player.chips}
                       </div>
                     </div>
@@ -364,14 +400,14 @@ const Index = () => {
                           key={i}
                           className="absolute w-10 h-10"
                           style={{
-                            transform: `translateY(${i * -3}px) translateZ(${i * 2}px)`,
+                            transform: `translateY(${i * -2}px) translateZ(${i * 1}px) rotateX(55deg)`,
                             zIndex: i
                           }}
                         >
-                          <div className="w-full h-full rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg transform-gpu transition-transform duration-200 hover:scale-110" />
+                          <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
                         </div>
                       ))}
-                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-b from-primary/30 to-primary/10 border-2 border-primary shadow-lg flex items-center justify-center text-xs font-bold text-primary">
+                      <div className="relative w-10 h-10 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-xs font-bold text-white/90 transform-gpu rotateX(55deg)">
                         ${player.bet}
                       </div>
                     </div>
@@ -424,7 +460,7 @@ const Index = () => {
       <style>
         {`
           .deal-animation {
-            animation: dealCard 0.5s ease-out forwards;
+            animation: dealCard 0.3s ease-out forwards;
           }
           
           @keyframes dealCard {
@@ -432,11 +468,11 @@ const Index = () => {
               transform: translate(
                 calc(var(--deal-from-x) - 50%),
                 calc(var(--deal-from-y) - 50%)
-              ) scale(0.75);
+              ) scale(0.75) rotate(180deg);
               opacity: 0;
             }
             100% {
-              transform: translate(0, 0) scale(1);
+              transform: translate(0, 0) scale(1) rotate(0deg);
               opacity: 1;
             }
           }
@@ -472,16 +508,14 @@ const Index = () => {
           .chip-stack-3d {
             transform-style: preserve-3d;
             perspective: 1000px;
-            transform: rotateX(45deg);
-          }
-
-          .chip-stack-3d:hover {
-            transform: rotateX(45deg) scale(1.1);
           }
 
           .chip-stack-3d > * {
-            transition: transform 0.3s ease;
-            backface-visibility: hidden;
+            transition: all 0.2s ease;
+          }
+
+          .chip-stack-3d:hover > * {
+            transform: translateY(0) rotateX(0) !important;
           }
         `}
       </style>
