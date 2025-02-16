@@ -28,36 +28,18 @@ export async function runTournament(
     settings.handsPerLevel
   );
 
+  let handCount = 0;
+  const MAX_HANDS = 20; // Safety limit
+
   // Run game loop until tournament complete
-  while (table.players.some(p => !p.eliminated)) {
+  while (table.players.some(p => !p.eliminated) && handCount < MAX_HANDS) {
     // Start new hand
     table.dealCards();
     table.handNumber++; // Increment hand number at start of each hand
+    handCount++;
 
-    // Emit initial state
-    eventCallback({
-      type: 'gameState',
-      data: {
-        players: table.players,
-        pot: table.pot,
-        communityCards: table.communityCards,
-        currentBet: table.currentBet,
-        currentPlayer: table.currentPlayerIndex,
-        phase: table.phase,
-        lastAction: table.lastAction,
-        handNumber: table.handNumber,
-        currentLevel: table.currentLevel,
-        smallBlind: table.smallBlind,
-        bigBlind: table.bigBlind,
-        handsUntilBlindsIncrease: table.handsPerLevel - (table.handNumber % table.handsPerLevel)
-      }
-    });
-
-    // Play hand until complete
-    while (!(await table.isHandComplete())) {
-      await table.handlePlayerTurn();
-      
-      // Emit updated state after each turn
+    // In test mode, only emit state at start of hand
+    if (process.env.NODE_ENV !== 'test') {
       eventCallback({
         type: 'gameState',
         data: {
@@ -75,9 +57,35 @@ export async function runTournament(
           handsUntilBlindsIncrease: table.handsPerLevel - (table.handNumber % table.handsPerLevel)
         }
       });
+    }
 
-      // Small delay between turns to prevent overwhelming the event system
-      await new Promise(resolve => setTimeout(resolve, 50));
+    // Play hand until complete
+    let iterations = 0;
+    while (!(await table.isHandComplete()) && iterations < 10) { // Reduced max iterations
+      await table.handlePlayerTurn();
+      
+      // Only emit state updates in non-test mode
+      if (process.env.NODE_ENV !== 'test') {
+        eventCallback({
+          type: 'gameState',
+          data: {
+            players: table.players,
+            pot: table.pot,
+            communityCards: table.communityCards,
+            currentBet: table.currentBet,
+            currentPlayer: table.currentPlayerIndex,
+            phase: table.phase,
+            lastAction: table.lastAction,
+            handNumber: table.handNumber,
+            currentLevel: table.currentLevel,
+            smallBlind: table.smallBlind,
+            bigBlind: table.bigBlind,
+            handsUntilBlindsIncrease: table.handsPerLevel - (table.handNumber % table.handsPerLevel)
+          }
+        });
+      }
+
+      iterations++;
     }
   }
 

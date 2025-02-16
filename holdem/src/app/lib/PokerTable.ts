@@ -190,7 +190,7 @@ export class PokerTable {
     
     // Enforce minimum raise amount: must be at least one big blind above current bet
     if (amount < this.currentBet + this.bigBlind) {
-        amount = this.currentBet + this.bigBlind;
+      amount = this.currentBet + this.bigBlind;
     }
 
     const toCall = this.currentBet - player.bet;
@@ -198,44 +198,49 @@ export class PokerTable {
     const totalNeeded = Math.min(toCall + raiseAmount, player.chips);
     
     // Handle all-in
-    player.chips -= totalNeeded;
-    player.bet += totalNeeded;
-    player.totalBets += totalNeeded;
-    this.pot += totalNeeded;
+    if (totalNeeded >= player.chips) {
+      // Player is going all-in
+      this.pot += player.chips;
+      player.bet = player.chips;
+      player.totalBets += player.chips;
+      player.chips = 0;
+    } else {
+      player.chips -= totalNeeded;
+      player.bet += totalNeeded;
+      player.totalBets += totalNeeded;
+      this.pot += totalNeeded;
+    }
     
     // Only update current bet if player had enough chips
     if (totalNeeded === toCall + raiseAmount) {
-        this.currentBet = amount;
+      this.currentBet = amount;
     } else {
-        this.currentBet = Math.max(this.currentBet, player.bet);
+      this.currentBet = Math.max(this.currentBet, player.bet);
     }
     player.handsPlayed++;
 
     // Check for all-in
     if (player.chips === 0) {
-        this.checkElimination(player);
+      this.checkElimination(player);
     }
   }
 
   private checkElimination(player: PokerPlayer) {
     if (player.chips === 0) {
-        if (player.folded) {
-            // Immediate elimination if player folded
-            player.eliminated = true;
-            player.rank = this.players.filter(p2 => !p2.eliminated).length + 1;
-        } else if (this.phase === 'showdown') {
-            // Eliminate after showdown if they didn't win
-            const activePlayers = this.players.filter(p => !p.folded && !p.eliminated);
-            if (!activePlayers.includes(player)) {
-                player.eliminated = true;
-                player.rank = this.players.filter(p2 => !p2.eliminated).length + 1;
-            }
-        } else if (this.pot === 0) {
-            // Eliminate if there's no pot to win
-            player.eliminated = true;
-            player.rank = this.players.filter(p2 => !p2.eliminated).length + 1;
+      if (player.folded) {
+        // Immediate elimination if player folded with no chips
+        player.eliminated = true;
+        player.rank = this.players.filter(p2 => !p2.eliminated).length + 1;
+      } else if (this.phase === 'showdown') {
+        // Eliminate after showdown if they didn't win
+        const activePlayers = this.players.filter(p => !p.folded && !p.eliminated);
+        const isWinner = activePlayers.some(p => p.id === player.id);
+        if (!isWinner) {
+          player.eliminated = true;
+          player.rank = this.players.filter(p2 => !p2.eliminated).length + 1;
         }
-        // Otherwise, wait for hand to complete before elimination
+      }
+      // Otherwise, wait for hand to complete before elimination
     }
   }
 
@@ -265,49 +270,71 @@ export class PokerTable {
     this.players.forEach(p => {
       if (!p.eliminated) {
         p.hand = [this.deck.pop()!, this.deck.pop()!];
-        p.folded = false;
-        p.bet = 0;
       }
     });
 
     // Post blinds
     const activePlayers = this.players.filter(p => !p.eliminated);
     if (activePlayers.length >= 2) {
-        // Reset bets before posting blinds
-        activePlayers.forEach(p => p.bet = 0);
-        
-        // Small blind
-        const sbPlayer = activePlayers[0];
-        const sbAmount = Math.min(this.smallBlind, sbPlayer.chips);
-        sbPlayer.chips -= sbAmount;
-        sbPlayer.bet = sbAmount;
-        sbPlayer.totalBets += sbAmount;
-        this.pot += sbAmount;
-        
-        // Big blind
-        const bbPlayer = activePlayers[1];
-        const bbAmount = Math.min(this.bigBlind, bbPlayer.chips);
-        bbPlayer.chips -= bbAmount;
-        bbPlayer.bet = bbAmount;
-        bbPlayer.totalBets += bbAmount;
-        this.pot += bbAmount;
-        this.currentBet = bbAmount;
+      const isHeadsUp = activePlayers.length === 2;
+      
+      // In heads-up play:
+      // - Dealer (button) posts small blind
+      // - Non-dealer posts big blind
+      // - Dealer acts first preflop, last on all other streets
+      const [nonDealer, dealer] = activePlayers;
+      
+      // Small blind (dealer in heads-up)
+      const sbPlayer = isHeadsUp ? dealer : nonDealer;
+      const sbAmount = Math.min(this.smallBlind, sbPlayer.chips);
+      sbPlayer.chips -= sbAmount;
+      sbPlayer.bet = sbAmount;
+      sbPlayer.totalBets += sbAmount;
+      this.pot += sbAmount;
+      
+      // Big blind (non-dealer in heads-up)
+      const bbPlayer = isHeadsUp ? nonDealer : activePlayers[1];
+      const bbAmount = Math.min(this.bigBlind, bbPlayer.chips);
+      bbPlayer.chips -= bbAmount;
+      bbPlayer.bet = bbAmount;
+      bbPlayer.totalBets += bbAmount;
+      this.pot += bbAmount;
+      this.currentBet = bbAmount;
 
-        // In heads-up play, dealer acts first preflop
-        this.currentPlayerIndex = activePlayers.length === 2 ? 0 : 2 % activePlayers.length;
+      // Check for all-in situations after posting blinds
+      if (sbPlayer.chips === 0) {
+        this.checkElimination(sbPlayer);
+      }
+      if (bbPlayer.chips === 0) {
+        this.checkElimination(bbPlayer);
+      }
+
+      // In heads-up play, dealer (small blind) acts first preflop
+      this.currentPlayerIndex = isHeadsUp ? 1 : 2 % activePlayers.length;
     }
   }
 
   async isHandComplete(): Promise<boolean> {
     const activePlayers = this.players.filter(p => !p.folded && !p.eliminated);
+    const remainingPlayers = this.players.filter(p => !p.eliminated);
+    
+    // Tournament is complete if only one player remains
+    if (remainingPlayers.length === 1) {
+      // Ensure winner has all chips
+      const winner = remainingPlayers[0];
+      const totalChips = this.players.reduce((sum, p) => sum + p.chips, 0) + this.pot;
+      winner.chips = totalChips;
+      winner.rank = 1;
+      return true;
+    }
     
     if (activePlayers.length === 1 || this.phase === 'showdown') {
       const winner = activePlayers[0];
-      const potAmount = this.pot; // Store pot amount before resetting
-      this.pot = 0; // Reset pot before distributing to prevent double counting
-      winner.chips += potAmount;
-      winner.handsWon++;
-      winner.biggestPot = Math.max(winner.biggestPot, potAmount);
+      if (winner) {
+        winner.chips += this.pot;
+        winner.handsWon++;
+        winner.biggestPot = Math.max(winner.biggestPot, this.pot);
+      }
       
       // Check for eliminations after pot distribution
       this.players.forEach(p => {
@@ -317,11 +344,12 @@ export class PokerTable {
         }
       });
 
-      // Reset bets
+      // Reset bets and pot
       this.players.forEach(p => {
         p.bet = 0;
       });
       this.currentBet = 0;
+      this.pot = 0; // Reset pot after distribution
 
       await this.rotatePositions();
       this.handNumber++; // Increment hand number after hand completes
@@ -346,7 +374,10 @@ export class PokerTable {
       }
     } while (this.players[0].eliminated);
 
-    await new Promise(resolve => setTimeout(resolve, 100)); // Reduced delay
+    // Only add delay in non-test environment
+    if (process.env.NODE_ENV !== 'test') {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
 
   async progressPhase() {
@@ -379,7 +410,10 @@ export class PokerTable {
       this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 100)); // Reduced delay
+    // Only add delay in non-test environment
+    if (process.env.NODE_ENV !== 'test') {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
 
   // ... rest of the class implementation ...

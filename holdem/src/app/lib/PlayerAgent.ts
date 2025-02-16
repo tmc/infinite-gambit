@@ -255,50 +255,19 @@ Then provide a brief explanation of your decision in character.`;
     }
   }
 
-  private getFallbackDecision(context: GameContext): { action: string; amount?: number; explanation: string } {
-    const handAnalysis = this.lastHandAnalysis || this.analyzeHand(context.hand, context.communityCards);
-    const { style, riskTolerance, bluffFrequency } = this.personality;
-    
-    // Basic decision making based on hand strength and personality
-    const effectiveStrength = handAnalysis.strength * (1 + riskTolerance);
-    const shouldBluff = Math.random() < bluffFrequency;
-    
-    if (shouldBluff && context.playerChips > context.currentBet * 3) {
-      const amount = Math.min(
-        context.currentBet * 3,
-        context.playerChips,
-        context.pot * (riskTolerance + 0.5)
-      );
-      return {
-        action: 'raise',
-        amount: Math.floor(amount),
-        explanation: `${this.personality.name} decides to bluff with a confident demeanor`
-      };
-    }
-
-    if (effectiveStrength < 0.2 && style !== 'aggressive') {
-      return {
-        action: 'fold',
-        explanation: `${this.personality.name} carefully considers and decides to fold`
-      };
-    }
-
-    return {
-      action: 'call',
-      explanation: `${this.personality.name} makes a measured call`
-    };
-  }
-
   async decideAction(context: GameContext): Promise<{ action: string; amount?: number }> {
     const { action, amount, explanation } = await this.getDecision(context);
-    console.log(`\nPlayer ${this.personality.name} decision process:\n${explanation}`);
+    // Only log in non-test mode
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`\nPlayer ${this.personality.name} decision process:\n${explanation}`);
+    }
     return { action, amount };
   }
 
   async getCommentary(decision: { action: string; amount?: number }): Promise<string> {
-    // In test environment, always use default commentary
+    // In test environment, use minimal commentary
     if (process.env.NODE_ENV === 'test') {
-        return this.getDefaultCommentary(decision);
+      return '';
     }
 
     try {
@@ -345,5 +314,39 @@ Provide a brief, in-character explanation of your decision.`;
     const style = this.personality.style;
     const comments = commentStyles[style];
     return comments[Math.floor(Math.random() * comments.length)];
+  }
+
+  private getFallbackDecision(context: GameContext): { action: string; amount?: number; explanation: string } {
+    const handAnalysis = this.lastHandAnalysis || this.analyzeHand(context.hand, context.communityCards);
+    const { style, riskTolerance, bluffFrequency } = this.personality;
+    
+    // Basic decision making based on hand strength and personality
+    const effectiveStrength = handAnalysis.strength * (1 + riskTolerance);
+    const shouldBluff = Math.random() < bluffFrequency;
+    
+    if (shouldBluff && context.playerChips > context.currentBet * 3) {
+      const amount = Math.min(
+        context.currentBet * 3,
+        context.playerChips,
+        context.pot * (riskTolerance + 0.5)
+      );
+      return {
+        action: 'raise',
+        amount: Math.floor(amount),
+        explanation: process.env.NODE_ENV === 'test' ? '' : `${this.personality.name} decides to bluff with a confident demeanor`
+      };
+    }
+
+    if (effectiveStrength < 0.2 && style !== 'aggressive') {
+      return {
+        action: 'fold',
+        explanation: process.env.NODE_ENV === 'test' ? '' : `${this.personality.name} carefully considers and decides to fold`
+      };
+    }
+
+    return {
+      action: 'call',
+      explanation: process.env.NODE_ENV === 'test' ? '' : `${this.personality.name} makes a measured call`
+    };
   }
 } 

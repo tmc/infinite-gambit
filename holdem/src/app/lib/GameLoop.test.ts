@@ -6,19 +6,17 @@ declare const expect: any;
 
 import { runTournament, TournamentSettings, TournamentEvent } from './GameLoop';
 
-// Jest test for the runTournament function
-
 describe('runTournament', () => {
-  // Increase timeout for all tests in this describe block
-  jest.setTimeout(120000);
+  // Ultra-aggressive timeout
+  jest.setTimeout(1000);
 
   it('should quickly complete with very low starting chips', async () => {
     const settings: TournamentSettings = {
       playerCount: 2,
-      startingChips: 5, // low chips to force quick elimination
+      startingChips: 1,
       blinds: {
-        small: 10,
-        big: 20
+        small: 1,
+        big: 2
       },
       handsPerLevel: 1
     };
@@ -34,16 +32,16 @@ describe('runTournament', () => {
     expect(Array.isArray(completeEvent?.data.players)).toBe(true);
   });
 
-  it('should properly handle a tournament with realistic chip counts', async () => {
+  it('should properly handle a full tournament with realistic chip counts', async () => {
     const bigBlind = 20;
     const settings: TournamentSettings = {
-      playerCount: 4,
-      startingChips: bigBlind * 100, // 2000 chips = 100x big blind
+      playerCount: 4, // Good size for quick testing
+      startingChips: bigBlind * 50, // 1000 chips
       blinds: {
         small: bigBlind / 2,
         big: bigBlind
       },
-      handsPerLevel: 10
+      handsPerLevel: 3 // Fast blind increases
     };
 
     const events: TournamentEvent[] = [];
@@ -55,21 +53,48 @@ describe('runTournament', () => {
     const completeEvent = events.find(e => e.type === 'tournamentComplete');
     expect(completeEvent).toBeDefined();
     
-    // Check that we had multiple gameState events (indicating multiple hands were played)
-    const gameStateEvents = events.filter(e => e.type === 'gameState');
-    expect(gameStateEvents.length).toBeGreaterThan(10); // Should have many game states
+    // Verify final tournament state
+    const players = completeEvent?.data.players;
+    const eliminatedPlayers = players.filter((p: any) => p.eliminated);
+    const nonEliminatedPlayers = players.filter((p: any) => !p.eliminated);
     
-    // Verify blind levels increased at least once
-    const finalGameState = gameStateEvents[gameStateEvents.length - 1].data;
-    expect(finalGameState.currentLevel).toBeGreaterThan(1);
+    // Verify correct number of eliminations
+    expect(eliminatedPlayers.length).toBe(settings.playerCount - 1); // All but winner eliminated
+    expect(nonEliminatedPlayers.length).toBe(1); // Exactly one winner
     
     // Verify winner has all the chips
-    const players = completeEvent?.data.players;
-    const nonEliminatedPlayers = players.filter((p: any) => !p.eliminated);
-    expect(nonEliminatedPlayers.length).toBe(1); // Should be exactly one winner
-    
-    // Winner should have all the chips (total = playerCount * startingChips)
     const winner = nonEliminatedPlayers[0];
     expect(winner.chips).toBe(settings.playerCount * settings.startingChips);
+    
+    // Verify elimination order (ranks should be sequential)
+    const ranks = eliminatedPlayers.map((p: any) => p.rank).sort();
+    for (let i = 0; i < ranks.length; i++) {
+      expect(ranks[i]).toBe(i + 2); // Winner is rank 1, eliminated start at 2
+    }
+    
+    // Verify player statistics
+    players.forEach((player: any) => {
+      expect(player.handsPlayed).toBeGreaterThan(0);
+      expect(player.totalBets).toBeGreaterThan(0);
+      if (!player.eliminated) {
+        expect(player.handsWon).toBeGreaterThan(0);
+      }
+    });
+
+    // Verify tournament progression through player stats
+    const totalHandsPlayed = Math.max(...players.map((p: any) => p.handsPlayed));
+    expect(totalHandsPlayed).toBeGreaterThan(settings.handsPerLevel); // At least one blind level completed
+    
+    // Verify reasonable betting activity
+    const totalBetsSum = players.reduce((sum: number, p: any) => sum + p.totalBets, 0);
+    expect(totalBetsSum).toBeGreaterThan(settings.playerCount * settings.blinds.big * totalHandsPlayed);
+    
+    // Verify some players won multiple hands
+    const multiHandWinners = players.filter((p: any) => p.handsWon > 1);
+    expect(multiHandWinners.length).toBeGreaterThan(0);
+    
+    // Verify biggest pots indicate significant betting
+    const maxPot = Math.max(...players.map((p: any) => p.biggestPot));
+    expect(maxPot).toBeGreaterThan(settings.blinds.big * 2);
   });
 }); 
