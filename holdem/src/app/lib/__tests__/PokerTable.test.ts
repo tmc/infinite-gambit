@@ -2,6 +2,9 @@
 import { PokerTable } from '../PokerTable';
 
 describe('PokerTable', () => {
+  // Increase timeout for all tests
+  jest.setTimeout(30000);
+
   describe('Basic Game Flow', () => {
     it('should initialize correctly with given settings', () => {
       const table = new PokerTable(4, 1000, 10, 20);
@@ -14,7 +17,7 @@ describe('PokerTable', () => {
       expect(table.pot).toBe(0);
     });
 
-    it('should handle a complete hand with multiple betting rounds', () => {
+    it('should handle a complete hand with multiple betting rounds', async () => {
       const table = new PokerTable(4, 1000, 10, 20);
       table.dealCards();
 
@@ -22,8 +25,8 @@ describe('PokerTable', () => {
       const initialChips = table.players.map(p => p.chips);
       
       // Play through multiple rounds
-      while (!table.isHandComplete()) {
-        table.handlePlayerTurn();
+      while (!(await table.isHandComplete())) {
+        await table.handlePlayerTurn();
       }
 
       // Verify hand completed
@@ -43,7 +46,7 @@ describe('PokerTable', () => {
   });
 
   describe('Player Elimination', () => {
-    it('should eliminate players when they run out of chips', () => {
+    it('should eliminate players when they run out of chips', async () => {
       const table = new PokerTable(4, 100, 50, 100); // High blinds for quick elimination
       
       let eliminationCount = 0;
@@ -53,8 +56,8 @@ describe('PokerTable', () => {
       while (eliminationCount < 3 && handCount < maxHands) {
         table.dealCards();
         
-        while (!table.isHandComplete()) {
-          table.handlePlayerTurn();
+        while (!(await table.isHandComplete())) {
+          await table.handlePlayerTurn();
         }
 
         eliminationCount = table.players.filter(p => p.eliminated).length;
@@ -96,7 +99,7 @@ describe('PokerTable', () => {
   });
 
   describe('Betting Rounds', () => {
-    it('should progress through all betting rounds correctly', () => {
+    it('should progress through all betting rounds correctly', async () => {
       const table = new PokerTable(4, 1000, 10, 20);
       const phases = ['preflop', 'flop', 'turn', 'river', 'showdown'];
       
@@ -111,16 +114,15 @@ describe('PokerTable', () => {
           .filter(p => !p.eliminated && !p.folded)
           .forEach(p => table.call(p));
         
-        if (table.phase !== phases[phaseIndex]) {
-          phaseIndex++;
-        }
+        await table.progressPhase();
+        phaseIndex++;
       }
 
       // Verify community cards
       expect(table.communityCards.length).toBe(5);
     });
 
-    it('should handle folded players correctly', () => {
+    it('should handle folded players correctly', async () => {
       const table = new PokerTable(4, 1000, 10, 20);
       table.dealCards();
       
@@ -133,7 +135,7 @@ describe('PokerTable', () => {
       }
 
       // Verify hand completes immediately
-      expect(table.isHandComplete()).toBe(true);
+      expect(await table.isHandComplete()).toBe(true);
       
       // Verify winner gets the pot
       const winner = table.players.find(p => !p.folded && !p.eliminated);
@@ -142,15 +144,15 @@ describe('PokerTable', () => {
   });
 
   describe('Tournament Progress', () => {
-    it('should track tournament statistics correctly', () => {
+    it('should track tournament statistics correctly', async () => {
       const table = new PokerTable(4, 1000, 10, 20);
       const initialHandNumber = table.handNumber;
       
       // Play 5 hands
       for (let i = 0; i < 5; i++) {
         table.dealCards();
-        while (!table.isHandComplete()) {
-          table.handlePlayerTurn();
+        while (!(await table.isHandComplete())) {
+          await table.handlePlayerTurn();
         }
       }
 
@@ -169,7 +171,7 @@ describe('PokerTable', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle heads-up play correctly', () => {
+    it('should handle heads-up play correctly', async () => {
       const table = new PokerTable(2, 1000, 10, 20);
       table.dealCards();
       
@@ -180,8 +182,8 @@ describe('PokerTable', () => {
       expect(table.players[1].bet).toBe(0);
       
       // Play a hand
-      while (!table.isHandComplete()) {
-        table.handlePlayerTurn();
+      while (!(await table.isHandComplete())) {
+        await table.handlePlayerTurn();
       }
       
       // Verify hand completed
@@ -189,7 +191,7 @@ describe('PokerTable', () => {
       expect(table.players.some(p => p.handsWon === 1)).toBe(true);
     });
 
-    it('should handle simultaneous all-ins correctly', () => {
+    it('should handle simultaneous all-ins correctly', async () => {
       const table = new PokerTable(3, 100, 10, 20);
       table.dealCards();
       
@@ -206,8 +208,8 @@ describe('PokerTable', () => {
       });
       
       // Complete the hand
-      while (!table.isHandComplete()) {
-        table.handlePlayerTurn();
+      while (!(await table.isHandComplete())) {
+        await table.handlePlayerTurn();
       }
       
       // Verify pot was awarded

@@ -8,6 +8,7 @@ export default function NewGame() {
   const [playerCount, setPlayerCount] = useState(6);
   const [startingChips, setStartingChips] = useState(1000);
   const [blinds, setBlinds] = useState({ small: 10, big: 20 });
+  const [handsPerLevel, setHandsPerLevel] = useState(10);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,6 +17,7 @@ export default function NewGame() {
       playerCount,
       startingChips,
       blinds,
+      handsPerLevel,
     }));
     // Navigate to the game page
     router.push('/game');
@@ -80,6 +82,25 @@ export default function NewGame() {
                 className="w-full px-3 py-2 border rounded-md"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Hands Before Blinds Double
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                value={handsPerLevel}
+                onChange={(e) => setHandsPerLevel(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+              <span className="text-sm text-gray-500">hands</span>
+            </div>
+            <p className="mt-1 text-sm text-gray-500">
+              Blinds will double every {handsPerLevel} hands to speed up the tournament
+            </p>
           </div>
 
           <button
