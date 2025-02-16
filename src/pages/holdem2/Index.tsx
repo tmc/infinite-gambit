@@ -193,13 +193,9 @@ const Index = () => {
     console.log('Executing step:', stepIndex, 'Current dealer position:', gameState.dealerPosition);
 
     switch (stepIndex) {
-      case 0: // Initialize new hand and post blinds
+      case 0: // Post small blind
         const smallBlindIndex = getPlayerIndex(0);
-        const bigBlindIndex = getPlayerIndex(1);
-        
-        // Get player IDs before updating state
         const smallBlindPlayerId = gameState.players[smallBlindIndex].id;
-        const bigBlindPlayerId = gameState.players[bigBlindIndex].id;
         
         setGameState(prev => {
           const updatedPlayers = prev.players.map((player, index) => {
@@ -210,6 +206,37 @@ const Index = () => {
                 bet: SMALL_BLIND
               };
             }
+            return player;
+          });
+
+          return {
+            ...prev,
+            players: updatedPlayers,
+            pot: SMALL_BLIND,
+            currentBet: SMALL_BLIND,
+            phase: 'preflop',
+            lastAction: `Small blind posted: ${SMALL_BLIND}`,
+            stepIndex: 0
+          };
+        });
+
+        setChipAnimations(prev => [
+          ...prev,
+          { 
+            fromId: smallBlindPlayerId, 
+            amount: SMALL_BLIND, 
+            timestamp: Date.now(), 
+            type: 'bet' 
+          }
+        ]);
+        break;
+
+      case 1: // Post big blind
+        const bigBlindIndex = getPlayerIndex(1);
+        const bigBlindPlayerId = gameState.players[bigBlindIndex].id;
+        
+        setGameState(prev => {
+          const updatedPlayers = prev.players.map((player, index) => {
             if (index === bigBlindIndex) {
               return {
                 ...player,
@@ -223,35 +250,27 @@ const Index = () => {
           return {
             ...prev,
             players: updatedPlayers,
-            pot: SMALL_BLIND + BIG_BLIND,
+            pot: prev.pot + BIG_BLIND,
             currentBet: BIG_BLIND,
-            phase: 'preflop',
-            lastAction: `Blinds posted: ${SMALL_BLIND}/${BIG_BLIND}`,
-            stepIndex: 0
+            lastAction: `Big blind posted: ${BIG_BLIND}`,
+            stepIndex: 1
           };
         });
 
-        // Add chip animations using the player IDs we got earlier
         setChipAnimations(prev => [
           ...prev,
           { 
-            fromId: smallBlindPlayerId, 
-            amount: SMALL_BLIND, 
-            timestamp: Date.now(), 
-            type: 'bet' 
-          },
-          { 
             fromId: bigBlindPlayerId, 
             amount: BIG_BLIND, 
-            timestamp: Date.now() + 100, 
+            timestamp: Date.now(), 
             type: 'bet' 
           }
         ]);
         break;
 
-      case 1: // Deal first card to player 1
+      case 2: // Deal first card to player 1
         const firstPlayerIndex = getPlayerIndex(0);
-        console.log('Dealing first card to player index:', firstPlayerIndex); // Debug log
+        console.log('Dealing first card to player index:', firstPlayerIndex);
         
         if (firstPlayerIndex >= 0 && firstPlayerIndex < gameState.players.length && firstPlayerIndex !== 3) {
           setGameState(prev => ({
@@ -261,14 +280,14 @@ const Index = () => {
               hand: index === firstPlayerIndex ? [shuffledDeck[0]] : player.hand
             })),
             lastAction: `Dealing first card to ${prev.players[firstPlayerIndex].name}`,
-            stepIndex: 1
+            stepIndex: 2
           }));
         } else {
           console.error('Invalid player index:', firstPlayerIndex);
         }
         break;
 
-      case 2: // Deal first card to player 2
+      case 3: // Deal first card to player 2
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -276,13 +295,13 @@ const Index = () => {
             hand: index === getPlayerIndex(1) ? [shuffledDeck[1]] : player.hand
           })),
           lastAction: `Dealing first card to ${prev.players[getPlayerIndex(1)].name}`,
-          stepIndex: 2
+          stepIndex: 3
         }));
         break;
 
       // ... Continue for each player's first card
 
-      case 3: // Deal first card to player 3
+      case 4: // Deal first card to player 3
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -290,11 +309,11 @@ const Index = () => {
             hand: index === getPlayerIndex(2) ? [shuffledDeck[2]] : player.hand
           })),
           lastAction: `Dealing first card to ${prev.players[getPlayerIndex(2)].name}`,
-          stepIndex: 3
+          stepIndex: 4
         }));
         break;
 
-      case 4: // Deal first card to player 5
+      case 5: // Deal first card to player 5
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -302,11 +321,11 @@ const Index = () => {
             hand: index === getPlayerIndex(3) ? [shuffledDeck[3]] : player.hand
           })),
           lastAction: `Dealing first card to ${prev.players[getPlayerIndex(3)].name}`,
-          stepIndex: 4
+          stepIndex: 5
         }));
         break;
 
-      case 5: // Deal first card to player 6
+      case 6: // Deal first card to player 6
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -314,19 +333,19 @@ const Index = () => {
             hand: index === getPlayerIndex(4) ? [shuffledDeck[4]] : player.hand
           })),
           lastAction: `Dealing first card to ${prev.players[getPlayerIndex(4)].name}`,
-          stepIndex: 5
-        }));
-        break;
-
-      case 6: // Start second round of dealing
-        setGameState(prev => ({
-          ...prev,
-          lastAction: 'Starting second round of cards',
           stepIndex: 6
         }));
         break;
 
-      case 7: // Deal second card to player 1
+      case 7: // Start second round of dealing
+        setGameState(prev => ({
+          ...prev,
+          lastAction: 'Starting second round of cards',
+          stepIndex: 7
+        }));
+        break;
+
+      case 8: // Deal second card to player 1
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -335,13 +354,13 @@ const Index = () => {
               [...player.hand, shuffledDeck[5]] : player.hand
           })),
           lastAction: `Dealing second card to ${prev.players[getPlayerIndex(0)].name}`,
-          stepIndex: 7
+          stepIndex: 8
         }));
         break;
 
       // ... Continue for each player's second card
 
-      case 8: // Deal second card to player 2
+      case 9: // Deal second card to player 2
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -350,11 +369,11 @@ const Index = () => {
               [...player.hand, shuffledDeck[6]] : player.hand
           })),
           lastAction: `Dealing second card to ${prev.players[getPlayerIndex(1)].name}`,
-          stepIndex: 8
+          stepIndex: 9
         }));
         break;
 
-      case 9: // Deal second card to player 3
+      case 10: // Deal second card to player 3
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -363,11 +382,11 @@ const Index = () => {
               [...player.hand, shuffledDeck[7]] : player.hand
           })),
           lastAction: `Dealing second card to ${prev.players[getPlayerIndex(2)].name}`,
-          stepIndex: 9
+          stepIndex: 10
         }));
         break;
 
-      case 10: // Deal second card to player 5
+      case 11: // Deal second card to player 5
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -376,11 +395,11 @@ const Index = () => {
               [...player.hand, shuffledDeck[8]] : player.hand
           })),
           lastAction: `Dealing second card to ${prev.players[getPlayerIndex(3)].name}`,
-          stepIndex: 10
+          stepIndex: 11
         }));
         break;
 
-      case 11: // Deal second card to player 6
+      case 12: // Deal second card to player 6
         setGameState(prev => ({
           ...prev,
           players: prev.players.map((player, index) => ({
@@ -389,37 +408,37 @@ const Index = () => {
               [...player.hand, shuffledDeck[9]] : player.hand
           })),
           lastAction: `Dealing second card to ${prev.players[getPlayerIndex(4)].name}`,
-          stepIndex: 11
+          stepIndex: 12
         }));
         break;
 
-      case 12: // Deal flop
+      case 13: // Deal flop
         setGameState(prev => ({
           ...prev,
           phase: 'flop',
           communityCards: [shuffledDeck[10], shuffledDeck[11], shuffledDeck[12]],
           lastAction: 'Dealing flop',
-          stepIndex: 12
+          stepIndex: 13
         }));
         break;
 
-      case 13: // Deal turn
+      case 14: // Deal turn
         setGameState(prev => ({
           ...prev,
           phase: 'turn',
           communityCards: [...prev.communityCards, shuffledDeck[13]],
           lastAction: 'Dealing turn',
-          stepIndex: 13
+          stepIndex: 14
         }));
         break;
 
-      case 14: // Deal river
+      case 15: // Deal river
         setGameState(prev => ({
           ...prev,
           phase: 'river',
           communityCards: [...prev.communityCards, shuffledDeck[14]],
           lastAction: 'Dealing river',
-          stepIndex: 14,
+          stepIndex: 15,
           isDealing: false
         }));
         break;
@@ -439,6 +458,7 @@ const Index = () => {
         ...INITIAL_GAME_STATE,
         dealerPosition: (prev.dealerPosition + 1) % prev.players.length,
         isDealing: true,
+        lastAction: 'Dealer button moved',
         stepIndex: 0
       }));
     } else {
@@ -452,15 +472,18 @@ const Index = () => {
     setShuffledDeck(newDeck);
     setDeck(newDeck);
 
-    // Reset to initial state
+    // Reset to initial state but only move the dealer button
     setGameState(prev => ({
       ...INITIAL_GAME_STATE,
       dealerPosition: (prev.dealerPosition + 1) % gameState.players.length,
       isDealing: true,
       phase: 'preflop',
-      lastAction: 'New hand dealt',
+      lastAction: 'Dealer button moved',
       stepIndex: -1
     }));
+
+    // Clear any existing animations
+    setChipAnimations([]);
   };
 
   const dealerPos = getDealerPosition();
@@ -538,13 +561,13 @@ const Index = () => {
 
   useEffect(() => {
     if (gameState.isDealing) {
-      const timer = setTimeout(() => {
-        placeBet('1', 50);
-        setTimeout(() => placeBet('2', 100), 1000);
-        setTimeout(() => placeBet('3', 150), 2000);
-        setTimeout(() => collectWinnings('2', 300), 5000);
-      }, 2500);
-      return () => clearTimeout(timer);
+      // const timer = setTimeout(() => {
+      //   placeBet('1', 50);
+      //   setTimeout(() => placeBet('2', 100), 1000);
+      //   setTimeout(() => placeBet('3', 150), 2000);
+      //   setTimeout(() => collectWinnings('2', 300), 5000);
+      // }, 2500);
+      // return () => clearTimeout(timer);
     }
   }, [gameState.isDealing]);
 
@@ -566,7 +589,7 @@ const Index = () => {
             <button 
               onClick={nextStep}
               className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
-              disabled={!gameState.isDealing || gameState.stepIndex >= 14}
+              disabled={!gameState.isDealing || gameState.stepIndex >= 15}
             >
               Next Step
             </button>
@@ -844,36 +867,4 @@ const Index = () => {
           @keyframes moveChip {
             0% {
               transform: translate(
-                calc(var(--start-x) - 50%),
-                calc(var(--start-y) - 50%)
-              );
-              opacity: 1;
-            }
-            100% {
-              transform: translate(
-                calc(var(--end-x) - 50%),
-                calc(var(--end-y) - 50%)
-              );
-              opacity: 0;
-            }
-          }
-
-          .chip-stack-3d {
-            transform-style: preserve-3d;
-            perspective: 1000px;
-          }
-
-          .chip-stack-3d > * {
-            transition: all 0.2s ease;
-          }
-
-          .chip-stack-3d:hover > * {
-            transform: translateY(0) rotateX(0) !important;
-          }
-        `}
-      </style>
-    </div>
-  );
-};
-
-export default Index;
+                calc(var(--start
