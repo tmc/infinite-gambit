@@ -32,7 +32,6 @@ export const PlayerCards: React.FC<PlayerCardsProps> = ({
             animationDelay: isDealing 
               ? `${((index * 2) + cardIndex) * 0.15}s` 
               : '0s',
-            transformOrigin: 'center center',
             '--deal-from-x': `${dealerPos.x}%`,
             '--deal-from-y': `${dealerPos.y}%`,
           } as React.CSSProperties}

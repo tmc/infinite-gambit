@@ -17,7 +17,7 @@ export const CommunityCards: React.FC<CommunityCardsProps> = ({
   };
 
   return (
-    <div className="flex gap-2 mb-8">
+    <div className="flex gap-2 justify-center mb-4">
       {cards.map((card, index) => (
         <div
           key={index}

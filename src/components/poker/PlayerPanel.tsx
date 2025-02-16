@@ -22,12 +22,12 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
 }) => {
   // Positions going clockwise from dealer (bottom center)
   const positions = [
-    { angle: 145, radius: { x: 32, y: 25 } },   // Player 1 (7:30)
-    { angle: 180, radius: { x: 32, y: 25 } },   // Player 2 (9:00)
-    { angle: -135, radius: { x: 32, y: 25 } },  // Player 3 (10:30)
-    { angle: 90, radius: { x: 0, y: 32 } },     // Dealer (6:00)
-    { angle: -45, radius: { x: 32, y: 25 } },   // Player 5 (1:30)
-    { angle: 0, radius: { x: 32, y: 25 } },     // Player 6 (3:00)
+    { angle: 135, radius: { x: 38, y: 30 } },   // Player 1 (7:30)
+    { angle: 180, radius: { x: 38, y: 30 } },   // Player 2 (9:00)
+    { angle: -135, radius: { x: 38, y: 30 } },  // Player 3 (10:30)
+    { angle: 90, radius: { x: 0, y: 35 } },     // Dealer (6:00)
+    { angle: -45, radius: { x: 38, y: 30 } },   // Player 5 (1:30)
+    { angle: 0, radius: { x: 38, y: 30 } },     // Player 6 (3:00)
   ];
 
   const pos = positions[index];
