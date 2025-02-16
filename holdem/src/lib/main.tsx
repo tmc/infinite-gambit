@@ -8,7 +8,9 @@ const payman = new Paymanai({
     environment: 'sandbox', // Use 'production' for live transactions
   });
 
-const payerIdMap = {
+type PayerIdMapKey = "1" | "2" | "3" | "4" | "5" | "6";
+
+const payerIdMap: Record<PayerIdMapKey, string> = {
     "1": "pd-1efebfcc-4eed-6a29-ae47-87e95dee5b8e",
     "2": "pd-1efebfcc-53c3-66da-ae47-87e95dee5b8e",
     "3": "pd-1efebfcc-57e2-61db-ae47-87e95dee5b8e",
@@ -19,17 +21,17 @@ const payerIdMap = {
 
 async function createPayment(winnerPositions: number[]) {
     const payment1 = await payman.payments.sendPayment({
-        paymentDestinationId: payerIdMap[winnerPositions[0].toString()],
+        paymentDestinationId: payerIdMap[winnerPositions[0].toString() as PayerIdMapKey],
         amountDecimal: 40.00,
     });
 
     const payment2 = await payman.payments.sendPayment({
-        paymentDestinationId: payerIdMap[winnerPositions[1].toString()],
+        paymentDestinationId: payerIdMap[winnerPositions[1].toString() as PayerIdMapKey],
         amountDecimal: 24.00,
     });
 
     const payment3 = await payman.payments.sendPayment({
-        paymentDestinationId: payerIdMap[winnerPositions[2].toString()],
+        paymentDestinationId: payerIdMap[winnerPositions[2].toString() as PayerIdMapKey],
         amountDecimal: 16.00,
     });
     
