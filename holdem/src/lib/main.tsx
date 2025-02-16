@@ -17,11 +17,6 @@ const payerIdMap = {
     "6": "pd-1efebfcc-648c-64de-ae47-87e95dee5b8e"
 };
 
-// function getWinnerPositions() {
-//     // Replace this with your actual implementation
-//     return [4, 3, 6]; // Example return value: [first, second, third]
-// }
-
 async function createPayment(winnerPositions: number[]) {
     const payment1 = await payman.payments.sendPayment({
         paymentDestinationId: payerIdMap[winnerPositions[0].toString()],
