@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { PlayerPanel } from '../../components/poker/PlayerPanel';
+import { ChipStack } from '../../components/poker/ChipStack';
+import { CommunityCards } from '../../components/poker/CommunityCards';
+import { type GameState, type ChipAnimation } from '../../types/poker';
 
 type Player = {
   id: string;
@@ -457,6 +461,8 @@ const Index: React.FC = () => {
     setChipAnimations([]);
   };
 
+  const dealerPos = getDealerPosition();
+
   useEffect(() => {
     if (gameState.isDealing) {
       // Removed automated actions
@@ -509,174 +515,80 @@ const Index: React.FC = () => {
             </div>
 
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
-              <div className="flex gap-2 mb-8">
-                {gameState.communityCards.map((card, index) => (
-                  <div
-                    key={index}
-                    className={`poker-card ${getCardColor(card)} ${
-                      gameState.isDealing ? 'deal-animation' : ''
-                    }`}
-                    style={{ 
-                      animationDelay: `${(index) * 0.15}s`,
-                      '--deal-from-x': '50%',
-                      '--deal-from-y': '50%',
-                    } as React.CSSProperties}
-                  >
-                    {card}
-                  </div>
-                ))}
-              </div>
+              <CommunityCards 
+                cards={gameState.communityCards}
+                isDealing={gameState.isDealing}
+                dealerPos={dealerPos}
+              />
               
               {gameState.pot > 0 && (
                 <div className="flex flex-col items-center">
-                  <div className="chip-stack-3d relative">
-                    {[...Array(Math.min(5, Math.ceil(gameState.pot / 100)))].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute w-16 h-16"
-                        style={{
-                          transform: `translateY(${i * -2}px) translateZ(${i * 1}px)`,
-                          zIndex: i
-                        }}
-                      >
-                        <div className="w-full h-full rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] transform-gpu transition-all duration-200" />
-                      </div>
-                    ))}
-                    <div className="relative w-16 h-16 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-sm font-bold text-white/90">
-                      ${gameState.pot}
-                    </div>
-                  </div>
+                  <ChipStack amount={gameState.pot} />
                 </div>
               )}
             </div>
 
-            {gameState.players.map((player, index) => {
-              const angle = (index * (360 / 6) - 90) * (Math.PI / 180);
-              const radius = 42;
-              const left = 50 + radius * Math.cos(angle);
-              const top = 50 + radius * Math.sin(angle);
-
-              return (
-                <div
-                  key={player.id}
-                  className={`player-panel absolute w-[200px] min-h-[140px] -translate-x-1/2 -translate-y-1/2 ${
-                    index === gameState.currentPlayer ? 'active ring-2 ring-primary animate-pulse' : ''
-                  } ${player.id === 'dealer' ? 'dealer-seat' : ''}`}
-                  style={{
-                    left: `${left}%`,
-                    top: `${top}%`,
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-2 min-h-[80px]">
-                    <div className="flex flex-col h-full">
-                      <h3 className="font-semibold text-lg mb-1">{player.name}</h3>
-                      <span
-                        className={`text-sm mb-2 ${
-                          player.personality.style === 'aggressive'
-                            ? 'text-red-400'
-                            : player.personality.style === 'conservative'
-                            ? 'text-blue-400'
-                            : player.personality.style === 'balanced'
-                            ? 'text-green-400'
-                            : 'text-purple-400'
-                        }`}
-                      >
-                        {player.personality.description}
-                      </span>
-                      {player.id !== 'dealer' && (
-                        <div className="text-lg font-bold text-primary bg-primary/10 px-2 py-1 rounded-md inline-block">
-                          ${player.chips}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {!player.eliminated && player.id !== 'dealer' && (
-                    <div className="flex gap-1 justify-center">
-                      {player.hand.map((card, cardIndex) => (
-                        <div
-                          key={cardIndex}
-                          className={`poker-card scale-75 ${getCardColor(card)} ${
-                            player.folded ? 'opacity-50' : ''
-                          } ${gameState.isDealing ? 'deal-animation' : ''}`}
-                          style={{
-                            animationDelay: `${((index * 2) + cardIndex) * 0.15}s`,
-                            transformOrigin: 'center center',
-                            '--deal-from-x': '50%',
-                            '--deal-from-y': '50%',
-                          } as React.CSSProperties}
-                        >
-                          {card}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {player.bet > 0 && (
-                    <div className="mt-4 flex flex-col items-center">
-                      <div className="chip-stack-3d relative">
-                        <div className="relative w-10 h-10 rounded-full border-[3px] border-[#7E69AB] bg-[#9b87f5] shadow-[0_0_10px_rgba(155,135,245,0.3),inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-2px_3px_rgba(0,0,0,0.3)] flex items-center justify-center text-xs font-bold text-white/90">
-                          ${player.bet}
-                        </div>
-                      </div>
-                      <div className="mt-1 text-sm font-semibold text-primary-foreground/80">
-                        Current bet
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {gameState.players.map((player, index) => (
+              <PlayerPanel
+                key={player.id}
+                player={player}
+                index={index}
+                isCurrentPlayer={index === gameState.currentPlayer}
+                dealerPos={dealerPos}
+                isDealing={gameState.isDealing}
+              />
+            ))}
 
             {chipAnimations.map(({fromId, toId, amount, timestamp, type}) => {
               const sourcePlayer = type === 'bet' ? 
-              gameState.players.find(p => p.id === fromId) :
-              { id: 'pot' };
-            const targetPlayer = type === 'collect' ? 
-              gameState.players.find(p => p.id === toId) :
-              { id: 'pot' };
-            
-            if (!sourcePlayer) return null;
+                gameState.players.find(p => p.id === fromId) :
+                { id: 'pot' };
+              const targetPlayer = type === 'collect' ? 
+                gameState.players.find(p => p.id === toId) :
+                { id: 'pot' };
+              
+              if (!sourcePlayer) return null;
 
-            const sourceIndex = type === 'bet' ? 
-              gameState.players.indexOf(sourcePlayer as Player) : -1;
-            const targetIndex = type === 'collect' && targetPlayer ? 
-              gameState.players.indexOf(targetPlayer as Player) : -1;
+              const sourceIndex = type === 'bet' ? 
+                gameState.players.indexOf(sourcePlayer as any) : -1;
+              const targetIndex = type === 'collect' && targetPlayer ? 
+                gameState.players.indexOf(targetPlayer as any) : -1;
 
-            const sourceAngle = type === 'bet' ? 
-              (sourceIndex * (360 / 6) - 90) * (Math.PI / 180) : 0;
-            const targetAngle = type === 'collect' ? 
-              (targetIndex * (360 / 6) - 90) * (Math.PI / 180) : 0;
+              const sourceAngle = type === 'bet' ? 
+                (sourceIndex * (360 / 6) - 90) * (Math.PI / 180) : 0;
+              const targetAngle = type === 'collect' ? 
+                (targetIndex * (360 / 6) - 90) * (Math.PI / 180) : 0;
 
-            const sourceX = type === 'bet' ? 
-              50 + 42 * Math.cos(sourceAngle) :
-              50;
-            const sourceY = type === 'bet' ? 
-              50 + 42 * Math.sin(sourceAngle) :
-              50;
+              const sourceX = type === 'bet' ? 
+                50 + 42 * Math.cos(sourceAngle) :
+                50;
+              const sourceY = type === 'bet' ? 
+                50 + 42 * Math.sin(sourceAngle) :
+                50;
 
-            const targetX = type === 'collect' ? 
-              50 + 42 * Math.cos(targetAngle) :
-              50;
-            const targetY = type === 'collect' ? 
-              50 + 42 * Math.sin(targetAngle) :
-              50;
+              const targetX = type === 'collect' ? 
+                50 + 42 * Math.cos(targetAngle) :
+                50;
+              const targetY = type === 'collect' ? 
+                50 + 42 * Math.sin(targetAngle) :
+                50;
 
-            return (
-              <div
-                key={timestamp}
-                className="chip absolute bg-primary/20 border-2 border-primary text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md z-50 chip-animation"
-                style={{
-                  '--start-x': `${sourceX}%`,
-                  '--start-y': `${sourceY}%`,
-                  '--end-x': `${targetX}%`,
-                  '--end-y': `${targetY}%`,
-                } as React.CSSProperties}
-              >
-                ${amount}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={timestamp}
+                  className="chip absolute bg-primary/20 border-2 border-primary text-primary w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md z-50 chip-animation"
+                  style={{
+                    '--start-x': `${sourceX}%`,
+                    '--start-y': `${sourceY}%`,
+                    '--end-x': `${targetX}%`,
+                    '--end-y': `${targetY}%`,
+                  } as React.CSSProperties}
+                >
+                  ${amount}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </main>
 
