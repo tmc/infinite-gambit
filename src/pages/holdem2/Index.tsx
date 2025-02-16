@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type Player = {
   id: string;
@@ -151,7 +151,7 @@ const shuffleDeck = (deck: string[]) => {
   return shuffled;
 };
 
-const Index = () => {
+const Index: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [deck, setDeck] = useState<string[]>([]);
   const [chipAnimations, setChipAnimations] = useState<ChipAnimation[]>([]);
@@ -216,7 +216,6 @@ const Index = () => {
         });
 
         setChipAnimations(prev => [
-          ...prev,
           { 
             fromId: smallBlindPlayerId, 
             amount: SMALL_BLIND, 
@@ -253,7 +252,6 @@ const Index = () => {
         });
 
         setChipAnimations(prev => [
-          ...prev,
           { 
             fromId: bigBlindPlayerId, 
             amount: BIG_BLIND, 
