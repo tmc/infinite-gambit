@@ -26,8 +26,8 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
     { angle: -120, radius: { x: 42, y: 35 } },  // Player 2 (mid-left)
     { angle: -60, radius: { x: 42, y: 35 } },   // Player 3 (top left)
     { angle: 90, radius: { x: 0, y: 42 } },     // Dealer (bottom center)
-    { angle: -30, radius: { x: 42, y: 35 } },   // Player 5 (top right)
-    { angle: -75, radius: { x: 42, y: 35 } },   // Player 6 (mid-right)
+    { angle: -75, radius: { x: 42, y: 35 } },   // Player 5 (top right)
+    { angle: -30, radius: { x: 42, y: 35 } },   // Player 6 (mid-right)
   ];
 
   const pos = positions[index];
