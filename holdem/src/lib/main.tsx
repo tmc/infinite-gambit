@@ -2,6 +2,10 @@ import Paymanai from 'paymanai';
 import dotenv from 'dotenv';
 
 dotenv.config();
+console.log({
+    xPaymanAPISecret: process.env.PAYMAN_API_SECRET!, // Your API key from the dashboard
+    environment: 'sandbox', // Use 'production' for live transactions
+});
 
 const payman = new Paymanai({
     xPaymanAPISecret: process.env.PAYMAN_API_SECRET!, // Your API key from the dashboard

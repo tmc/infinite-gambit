@@ -1,22 +1,38 @@
 'use client';
 
 import { useState } from 'react';
-import { createPayment } from '@/lib/main';
 
 export default function PaymentTestPage() {
   const [positions, setPositions] = useState<[number, number, number]>([1, 2, 3]);
   const [result, setResult] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      const payments = await createPayment(positions);
-      setResult(JSON.stringify(payments, null, 2));
+      const response = await fetch('/api/payment-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ positions }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process payment');
+      }
+      
+      setResult(JSON.stringify(data.payments, null, 2));
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setResult('');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,9 +66,10 @@ export default function PaymentTestPage() {
 
           <button
             type="submit"
-            className="w-full bg-cyan-600 text-white py-3 px-6 rounded-md hover:bg-cyan-700 transition-colors font-medium"
+            disabled={isLoading}
+            className="w-full bg-cyan-600 text-white py-3 px-6 rounded-md hover:bg-cyan-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Test Payment
+            {isLoading ? 'Processing...' : 'Test Payment'}
           </button>
         </form>
 
