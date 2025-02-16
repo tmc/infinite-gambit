@@ -19,7 +19,7 @@ const payerIdMap: Record<PayerIdMapKey, string> = {
     "6": "pd-1efebfcc-648c-64de-ae47-87e95dee5b8e"
 };
 
-async function createPayment(winnerPositions: number[]) {
+export async function createPayment(winnerPositions: number[]) {
     const payment1 = await payman.payments.sendPayment({
         paymentDestinationId: payerIdMap[winnerPositions[0].toString() as PayerIdMapKey],
         amountDecimal: 40.00,
