@@ -22,12 +22,12 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
 }) => {
   // Positions going clockwise from dealer (bottom center)
   const positions = [
-    { angle: 145, radius: { x: 42, y: 35 } },   // Player 1 (7:30)
-    { angle: 180, radius: { x: 42, y: 35 } },   // Player 2 (9:00)
-    { angle: -135, radius: { x: 42, y: 35 } },  // Player 3 (10:30)
-    { angle: 90, radius: { x: 0, y: 42 } },     // Dealer (6:00)
-    { angle: -45, radius: { x: 42, y: 35 } },   // Player 5 (1:30)
-    { angle: 0, radius: { x: 42, y: 35 } },     // Player 6 (3:00)
+    { angle: 145, radius: { x: 32, y: 25 } },   // Player 1 (7:30)
+    { angle: 180, radius: { x: 32, y: 25 } },   // Player 2 (9:00)
+    { angle: -135, radius: { x: 32, y: 25 } },  // Player 3 (10:30)
+    { angle: 90, radius: { x: 0, y: 32 } },     // Dealer (6:00)
+    { angle: -45, radius: { x: 32, y: 25 } },   // Player 5 (1:30)
+    { angle: 0, radius: { x: 32, y: 25 } },     // Player 6 (3:00)
   ];
 
   const pos = positions[index];
@@ -37,7 +37,7 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
 
   return (
     <div
-      className={`player-panel absolute w-[220px] min-h-[160px] -translate-x-1/2 -translate-y-1/2 ${
+      className={`player-panel absolute w-[180px] min-h-[140px] -translate-x-1/2 -translate-y-1/2 ${
         isCurrentPlayer ? 'ring-2 ring-primary' : ''
       } ${player.id === 'dealer' ? 'dealer-seat' : ''}`}
       style={{
@@ -50,7 +50,7 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
           <ArrowRight size={24} />
         </div>
       )}
-      <div className="flex justify-between items-start mb-2 min-h-[80px]">
+      <div className="flex justify-between items-start mb-2 min-h-[60px]">
         <div className="flex flex-col h-full">
           <h3 className="font-semibold text-lg mb-1">{player.name}</h3>
           <span
