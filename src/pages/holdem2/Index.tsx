@@ -2,42 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { PlayerPanel } from '../../components/poker/PlayerPanel';
 import { ChipStack } from '../../components/poker/ChipStack';
 import { CommunityCards } from '../../components/poker/CommunityCards';
-import { type GameState, type ChipAnimation } from '../../types/poker';
-
-type Player = {
-  id: string;
-  name: string;
-  chips: number;
-  hand: string[];
-  bet: number;
-  folded: boolean;
-  eliminated: boolean;
-  personality: {
-    style: 'aggressive' | 'conservative' | 'balanced' | 'unpredictable';
-    description: string;
-  };
-};
-
-type GameState = {
-  players: Player[];
-  pot: number;
-  communityCards: string[];
-  currentBet: number;
-  currentPlayer: number;
-  phase: string;
-  lastAction?: string;
-  dealerPosition: number;
-  isDealing: boolean;
-  stepIndex: number;
-};
-
-type ChipAnimation = {
-  fromId: string;
-  toId?: string;
-  amount: number;
-  timestamp: number;
-  type: 'bet' | 'collect';
-};
+import { type GameState, type ChipAnimation, type Player } from '../../types/poker';
 
 const INITIAL_GAME_STATE: GameState = {
   players: [
